@@ -14,7 +14,7 @@ contract BasicMath {
      * @param x the augend
      * @param y the addend
      */
-    function Add(int256 x, int256 y) public pure returns (uint256) {
+    function Add(int256 x, int256 y) public pure returns (int256) {
         return x + y;
     }
 
@@ -23,7 +23,7 @@ contract BasicMath {
      * @param x the minuend
      * @param y the subtrahend
      */
-    function Sub(int256 x, int256 y) public pure returns (uint256) {
+    function Sub(int256 x, int256 y) public pure returns (int256) {
         return x - y;
     }
 
@@ -32,7 +32,7 @@ contract BasicMath {
      * @param x the multiplicand
      * @param y the multiplier
      */
-    function Mul(int256 x, int256 y) public pure returns (uint256) {
+    function Mul(int256 x, int256 y) public pure returns (int256) {
         return x * y;
     }
 
@@ -41,7 +41,7 @@ contract BasicMath {
      * @param x the dividend
      * @param y the divisor
      */
-    function Div(int256 x, int256 y) public pure returns (uint256) {
+    function Div(int256 x, int256 y) public pure returns (int256) {
         // todo: check how this behaves regarding the integer
         return x / y;
     }
