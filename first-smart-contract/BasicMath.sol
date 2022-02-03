@@ -1,19 +1,19 @@
 // this will be deployed with remix
 pragma solidity >=0.7.0 <0.9.0;
-import "github.com/OpenZeppelin/zeppelin-solidity/contracts/math/SafeMath.sol";
 
 /**
  * @title BasicMath
  * @dev Store & retrieve value in a variable
  */
 contract BasicMath {
+    using SafeMath for uint256;
     /**
      * @dev adds two numbers
      * @param x the augend
      * @param y the addend
      */
     function Add(int256 x, int256 y) public view returns (uint256) {
-        return add(x, y);
+        return x.add(y);
     }
 
     /**
@@ -22,7 +22,7 @@ contract BasicMath {
      * @param y the subtrahend
      */
     function Sub(int256 x, int256 y) public view returns (uint256) {
-        return sub(x, y);
+        return x.sub(y);
     }
 
     /**
@@ -31,7 +31,7 @@ contract BasicMath {
      * @param y the multiplier
      */
     function Mul(int256 x, int256 y) public view returns (uint256) {
-        return mul(x, y);
+        return x.mul(y);
     }
 
     /**
@@ -40,6 +40,6 @@ contract BasicMath {
      * @param y the divisor
      */
     function Div(int256 x, int256 y) public view returns (uint256) {
-        return div(x, y);
+        return x.div(y);
     }
 }
