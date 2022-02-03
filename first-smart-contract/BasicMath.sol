@@ -1,5 +1,6 @@
 // this will be deployed with remix
 pragma solidity >=0.7.0 <0.9.0;
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 /**
  * @title BasicMath
