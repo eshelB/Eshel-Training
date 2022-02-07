@@ -4,8 +4,43 @@ import getWeb3 from "./getWeb3";
 
 import "./App.css";
 
+class Input extends Component {
+  render() {
+    return (
+      <div className="Input">
+        <form>
+          <label>
+            operand {this.props.label}: &emsp;
+            <input type="number" name="numform" onChange={this.props.onchange}/>
+          </label>
+        </form>
+      </div>
+    );
+  }
+}
+
+class MathButton extends Component {
+    render() {
+        return (
+            <div className="MathButton">
+                <label>
+                    <button onClick={this.props.onclick}>
+                        {this.props.label}
+                    </button>
+                </label>
+            </div>
+        );
+    }
+}
+
 class App extends Component {
-  state = { storageValue: 0, web3: null, accounts: null, contract: null };
+  state = { firstOperand: 0, secondOperand: 0, result: 0, web3: null, accounts: null, contract: null };
+  // functions = {
+  //   Add: this.getOperation("Add"),
+  //   Sub: this.getOperation("Sub"),
+  //   Mul: this.getOperation("Mul"),
+  //   Div: this.getOperation("Div"),
+  // };
 
   componentDidMount = async () => {
     try {
@@ -14,10 +49,6 @@ class App extends Component {
 
       // Use web3 to get the user's accounts.
       const accounts = await web3.eth.getAccounts();
-
-      // todo testing
-      console.log("available accounts:", accounts);
-      console.log("balance of 1st account:", accounts[0]);
 
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
@@ -28,31 +59,40 @@ class App extends Component {
         deployedNetwork && deployedNetwork.address,
       );
 
-      // console.log("the BasicMathContract like this:", BasicMathContract);
-      // console.log("the instance of the contract looks like this:", instance);
-
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
       this.setState({ web3, accounts, contract: instance }, this.runExample);
     } catch (error) {
-      // Catch any errors for any of the above operations.
-      alert(
-        `Failed to load web3, accounts, or contract. Check console for details.`,
-      );
+      alert(`Failed to load web3, accounts, or contract. Check console for details.`);
       console.error(error);
     }
   };
 
-  runExample = async () => {
-    const { contract, accounts } = this.state;
+  getOperation = (functionName) => {
+    const result = async () => {
+      const { contract, firstOperand, secondOperand } = this.state;
+      console.log(`calling ${functionName} function with operands:`, firstOperand, secondOperand);
 
-    // Adds two numbers, to prove it worked
-    // const response = await contract.methods.Add(10, 4).call();
-    console.log("the methods of the contract are:", contract.methods);
-    const response = await contract.methods.Add(10, 4).call();
+      let result;
+      try {
+        result = await contract.methods[functionName](firstOperand, secondOperand).call();
+      } catch (e) {
+        console.log(`there was an error calling the ${functionName} method:`, e);
+      }
 
-    // Update state with the result.
-    this.setState({ storageValue: response });
+      // Update state with the result.
+      console.log("the result of the ${functionName} function is:", result);
+      this.setState({ result });
+    }
+    console.log(`returned ${functionName} function`);
+    return result;
+  };
+
+  getStateSetterForName = (stateVariableName) => {
+    const result = async (event) => {
+      this.setState({[stateVariableName]: event.target.value});
+      console.log(`set for ${stateVariableName} to ${event.target.value}`);
+    }
+    console.log(`returned setter for ${stateVariableName} state variable`);
+    return result;
   };
 
   render() {
@@ -61,14 +101,23 @@ class App extends Component {
     }
     return (
       <div className="App">
-        <h1>Good to Go!</h1>
-        <p>Basic maths contract</p>
+        <h1>Basic Calculator</h1>
+        <p>Implemented with the basicMathsContract</p>
         <h2>Smart Contract Example</h2>
         <p>
-          If your contracts compiled and migrated successfully, below will be
-          the sum of 10 and 4
+          If your contracts compiled and migrated successfully, below calculator will behave correctly
         </p>
-        <div>The result value is: {this.state.storageValue}</div>
+        <Input label="operand1" onchange={this.getStateSetterForName("firstOperand")}/>
+        <Input label="operand2" onchange={this.getStateSetterForName("secondOperand")}/>
+        <div class="flexbox-container">
+          <MathButton label="Add" onclick={this.getOperation("Add")}/>
+          <MathButton label="Subtract" onclick={this.getOperation("Sub")}/>
+          <MathButton label="Multiply" onclick={this.getOperation("Mul")}/>
+          <MathButton label="Divide" onclick={this.getOperation("Div")}/>
+        </div>
+        <p>
+          result: {this.state.result}
+        </p>
       </div>
     );
   }

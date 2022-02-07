@@ -4123,12 +4123,12 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0xfe6f50f80094FF4cE6741B97D6173A4600AefE4b",
-      "transactionHash": "0x4da9747310f869c658e66888fa24a02688bc05f0f6fda71f086c2bb2a967985a"
+      "address": "0x0603cF4707E75264092cfbc5604E9Ec6be10d1C9",
+      "transactionHash": "0x59f437bff87f84f63d2d7f7a795549dc8ce61b2fd6baf4d3b7bf2fc7dba89a9a"
     }
   },
   "schemaVersion": "3.4.4",
-  "updatedAt": "2022-02-06T17:18:17.930Z",
+  "updatedAt": "2022-02-06T18:10:44.879Z",
   "networkType": "ethereum",
   "devdoc": {
     "details": "Supplies endpoints for basic arithmetic operations",
