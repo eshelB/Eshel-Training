@@ -26,3 +26,9 @@ web_modules/
 .env.test.local
 .env.production.local
 .env.local
+
+# terraform status files
+.terraform.lock.hcl
+.terraform/
+terraform.tfstate
+terraform.tfstate.backup

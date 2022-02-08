@@ -1,0 +1,9 @@
+[Unit]
+Description=Go Ethereum
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/geth --syncmode "full" --http --ws --http.addr 0.0.0.0 --ws.addr 0.0.0.0 --http.corsdomain '*' --ws.origins '*' --http.api eth,net,web3,personal --ws.api eth,net,web3,personal
+
+[Install]
+WantedBy=default.target

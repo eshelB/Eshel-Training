@@ -1,0 +1,3 @@
+cheaper machine created at ~15:40 feb 8
+syncing started at 16:43 feb 8
+block 0x245f0f at 16:49 feb 8
