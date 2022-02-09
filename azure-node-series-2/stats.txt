@@ -1,3 +1,8 @@
 cheaper machine created at ~15:40 feb 8
 syncing started at 16:43 feb 8
-block 0x245f0f at 16:49 feb 8
+block 0x245f0f at 16:49 feb 8  # this doesn't seem right, probably an extra 'f', or belonging to the other node
+block 0xa2457 at 17:10 feb 8
+block 0xa2457 at 17:10 feb 8
+block 0x293659 at 02:15 feb 9
+
+
