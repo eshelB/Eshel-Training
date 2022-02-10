@@ -1,6 +1,11 @@
-expensive machine created at 14:24 feb 8
-block 0x129ff8 on 15:08 feb 8
-block 0x183063 on 15:29 feb 8
-block 0x24fcc5 on 17:12 feb 8
-block 0x40f581 on 02:13 feb 9
+expensive machine created at 14:24 feb 8, with public IP: 20.71.37.140
+
+block 0x129ff8 at 15:08 feb 8
+block 0x183063 at 15:29 feb 8
+block 0x24fcc5 at 17:12 feb 8
+block 0x40f581 at 02:13 feb 9
+block 0x4942ac at 10:29 feb 9
+block 0x4d4bd3 at 16:55 feb 9
+block 0x4fd636 at 20:24 feb 9
+block 0x59736f at 10:27 feb 10
 

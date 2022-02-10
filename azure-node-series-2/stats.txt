@@ -1,8 +1,15 @@
-cheaper machine created at ~15:40 feb 8
+Cheaper machine created at ~15:40 feb 8, with public IP: 20.71.225.176
+
 syncing started at 16:43 feb 8
-block 0x245f0f at 16:49 feb 8  # this doesn't seem right, probably an extra 'f', or belonging to the other node
 block 0xa2457 at 17:10 feb 8
 block 0xa2457 at 17:10 feb 8
 block 0x293659 at 02:15 feb 9
 
+At 3:30am feb 9, the node ran out of memory. I enabled swapfile and started it again.
+Since I killed it myself, it caused the geth database to be corrupt. I had to start
+it again from the beginning.
 
+block 0xe6840 at 16:03 feb 9
+block 0x17ab10 at 16:56 feb 9
+block 0x2519b5 at 20:26 feb 9
+block 0x3e4fbf at 10:27 feb 10
