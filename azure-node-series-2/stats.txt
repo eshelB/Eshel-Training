@@ -13,3 +13,9 @@ block 0xe6840 at 16:03 feb 9
 block 0x17ab10 at 16:56 feb 9
 block 0x2519b5 at 20:26 feb 9
 block 0x3e4fbf at 10:27 feb 10
+block 0x3edaad at 11:02 feb 10, right before the crash
+
+At 11:02 feb 10, the node ran out of disk space. I mounted the disk I had created and started
+it again at 15:47 from the block it stopped.
+
+block 0x3ec42b at 15:49 feb 10
