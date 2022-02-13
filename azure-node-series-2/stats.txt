@@ -19,3 +19,6 @@ At 11:02 feb 10, the node ran out of disk space. I mounted the disk I had create
 it again at 15:47 from the block it stopped.
 
 block 0x3ec42b at 15:49 feb 10
+block 0x404a3d at 19:50 feb 10
+block 0x4a235e at 17:08 feb 12
+block 0x4b8c07 at 17:08 feb 13
