@@ -1,0 +1,86 @@
+syntax = "proto3";
+package eshelB.calculator.calculator;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "calculator/params.proto";
+// this line is used by starport scaffolding # 1
+
+option go_package = "github.com/eshelB/Eshel-Training/calculator/x/calculator/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // Parameters queries the parameters of the module.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/eshelB/calculator/calculator/params";
+  }
+  // Queries the result of a math operation
+	rpc Add(QueryAddRequest) returns (QueryAddResponse) {
+		option (google.api.http).get = "/eshelB/calculator/calculator/add";
+	}
+
+  // Queries the result of a math operation
+	rpc Sub(QuerySubRequest) returns (QuerySubResponse) {
+		option (google.api.http).get = "/eshelB/calculator/calculator/sub";
+	}
+
+  // Queries the result of a math operation
+	rpc Mul(QueryMulRequest) returns (QueryMulResponse) {
+		option (google.api.http).get = "/eshelB/calculator/calculator/mul";
+	}
+
+  // Queries the result of a math operation
+	rpc Div(QueryDivRequest) returns (QueryDivResponse) {
+		option (google.api.http).get = "/eshelB/calculator/calculator/div";
+	}
+
+// this line is used by starport scaffolding # 2
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryAddRequest {
+   double x = 1;
+   double y = 2;
+}
+
+message QueryAddResponse {
+  double result = 1;
+}
+
+message QuerySubRequest {
+   double x = 1;
+   double y = 2;
+}
+
+message QuerySubResponse {
+  double result = 1;
+}
+
+message QueryMulRequest {
+   double x = 1;
+   double y = 2;
+}
+
+message QueryMulResponse {
+  double result = 1;
+}
+
+message QueryDivRequest {
+   double x = 1;
+   double y = 2;
+}
+
+message QueryDivResponse {
+  double result = 1;
+}
+
+// this line is used by starport scaffolding # 3

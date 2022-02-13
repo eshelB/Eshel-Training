@@ -1,0 +1,12 @@
+syntax = "proto3";
+package eshelB.calculator.calculator;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/eshelB/Eshel-Training/calculator/x/calculator/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  
+}
