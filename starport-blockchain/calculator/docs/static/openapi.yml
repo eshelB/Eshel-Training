@@ -11842,6 +11842,218 @@ paths:
           type: boolean
       tags:
         - Query
+  /eshelB/calculator/calculator/add:
+    get:
+      summary: Queries the result of a math operation
+      operationId: EshelBCalculatorCalculatorAdd
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              result:
+                type: number
+                format: double
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: x
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: 'y'
+          in: query
+          required: false
+          type: number
+          format: double
+      tags:
+        - Query
+  /eshelB/calculator/calculator/div:
+    get:
+      summary: Queries the result of a math operation
+      operationId: EshelBCalculatorCalculatorDiv
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              result:
+                type: number
+                format: double
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: x
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: 'y'
+          in: query
+          required: false
+          type: number
+          format: double
+      tags:
+        - Query
+  /eshelB/calculator/calculator/mul:
+    get:
+      summary: Queries the result of a math operation
+      operationId: EshelBCalculatorCalculatorMul
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              result:
+                type: number
+                format: double
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: x
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: 'y'
+          in: query
+          required: false
+          type: number
+          format: double
+      tags:
+        - Query
+  /eshelB/calculator/calculator/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: EshelBCalculatorCalculatorParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /eshelB/calculator/calculator/sub:
+    get:
+      summary: Queries the result of a math operation
+      operationId: EshelBCalculatorCalculatorSub
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              result:
+                type: number
+                format: double
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: x
+          in: query
+          required: false
+          type: number
+          format: double
+        - name: 'y'
+          in: query
+          required: false
+          type: number
+          format: double
+      tags:
+        - Query
   /ibc/apps/transfer/v1/denom_traces:
     get:
       summary: DenomTraces queries all denomination traces.
@@ -19759,6 +19971,42 @@ definitions:
     description: >-
       MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount
       response type.
+  eshelB.calculator.calculator.MsgCalculateSumResponse:
+    type: object
+  eshelB.calculator.calculator.Params:
+    type: object
+    description: Params defines the parameters for the module.
+  eshelB.calculator.calculator.QueryAddResponse:
+    type: object
+    properties:
+      result:
+        type: number
+        format: double
+  eshelB.calculator.calculator.QueryDivResponse:
+    type: object
+    properties:
+      result:
+        type: number
+        format: double
+  eshelB.calculator.calculator.QueryMulResponse:
+    type: object
+    properties:
+      result:
+        type: number
+        format: double
+  eshelB.calculator.calculator.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        description: params holds all the parameters of this module.
+        type: object
+    description: QueryParamsResponse is response type for the Query/Params RPC method.
+  eshelB.calculator.calculator.QuerySubResponse:
+    type: object
+    properties:
+      result:
+        type: number
+        format: double
   ibc.applications.transfer.v1.DenomTrace:
     type: object
     properties:

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package eshelB.calculator.calculator;
+option go_package = "github.com/eshelB/Eshel-Training/calculator/x/calculator/types";
+
+message lastResult {
+  double result = 1;
+}
