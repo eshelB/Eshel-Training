@@ -9,12 +9,24 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCalculateSum{}, "calculator/CalculateSum", nil)
+	cdc.RegisterConcrete(&MsgCalculateMul{}, "calculator/CalculateMul", nil)
+	cdc.RegisterConcrete(&MsgCalculateDiv{}, "calculator/CalculateDiv", nil)
+	cdc.RegisterConcrete(&MsgCalculateSub{}, "calculator/CalculateSub", nil)
 	// this line is used by starport scaffolding # 2
 }
 
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgCalculateSum{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCalculateMul{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCalculateDiv{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCalculateSub{},
 	)
 	// this line is used by starport scaffolding # 3
 

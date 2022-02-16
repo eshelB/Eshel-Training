@@ -37,6 +37,11 @@ export interface QueryDivRequest {
 export interface QueryDivResponse {
     result: number;
 }
+export interface QueryGetLastResultRequest {
+}
+export interface QueryGetLastResultResponse {
+    result: number;
+}
 export declare const QueryParamsRequest: {
     encode(_: QueryParamsRequest, writer?: Writer): Writer;
     decode(input: Reader | Uint8Array, length?: number): QueryParamsRequest;
@@ -107,6 +112,20 @@ export declare const QueryDivResponse: {
     toJSON(message: QueryDivResponse): unknown;
     fromPartial(object: DeepPartial<QueryDivResponse>): QueryDivResponse;
 };
+export declare const QueryGetLastResultRequest: {
+    encode(_: QueryGetLastResultRequest, writer?: Writer): Writer;
+    decode(input: Reader | Uint8Array, length?: number): QueryGetLastResultRequest;
+    fromJSON(_: any): QueryGetLastResultRequest;
+    toJSON(_: QueryGetLastResultRequest): unknown;
+    fromPartial(_: DeepPartial<QueryGetLastResultRequest>): QueryGetLastResultRequest;
+};
+export declare const QueryGetLastResultResponse: {
+    encode(message: QueryGetLastResultResponse, writer?: Writer): Writer;
+    decode(input: Reader | Uint8Array, length?: number): QueryGetLastResultResponse;
+    fromJSON(object: any): QueryGetLastResultResponse;
+    toJSON(message: QueryGetLastResultResponse): unknown;
+    fromPartial(object: DeepPartial<QueryGetLastResultResponse>): QueryGetLastResultResponse;
+};
 /** Query defines the gRPC querier service. */
 export interface Query {
     /** Parameters queries the parameters of the module. */
@@ -119,6 +138,8 @@ export interface Query {
     Mul(request: QueryMulRequest): Promise<QueryMulResponse>;
     /** Queries the result of a math operation */
     Div(request: QueryDivRequest): Promise<QueryDivResponse>;
+    /** Queries a list of GetLastResult items. */
+    GetLastResult(request: QueryGetLastResultRequest): Promise<QueryGetLastResultResponse>;
 }
 export declare class QueryClientImpl implements Query {
     private readonly rpc;
@@ -128,6 +149,7 @@ export declare class QueryClientImpl implements Query {
     Sub(request: QuerySubRequest): Promise<QuerySubResponse>;
     Mul(request: QueryMulRequest): Promise<QueryMulResponse>;
     Div(request: QueryDivRequest): Promise<QueryDivResponse>;
+    GetLastResult(request: QueryGetLastResultRequest): Promise<QueryGetLastResultResponse>;
 }
 interface Rpc {
     request(service: string, method: string, data: Uint8Array): Promise<Uint8Array>;

@@ -17,7 +17,7 @@ const (
 	MemStoreKey = "mem_calculator"
 
 	// last result store key
-	MemStoreKey = "last-result"
+	LastResultKey = "last_result"
 )
 
 func KeyPrefix(p string) []byte {

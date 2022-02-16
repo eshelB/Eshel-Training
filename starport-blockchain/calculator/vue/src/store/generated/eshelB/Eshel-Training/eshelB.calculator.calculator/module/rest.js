@@ -170,6 +170,20 @@ export class Api extends HttpClient {
          * No description
          *
          * @tags Query
+         * @name QueryGetLastResult
+         * @summary Queries a list of GetLastResult items.
+         * @request GET:/eshelB/calculator/calculator/get_last_result
+         */
+        this.queryGetLastResult = (params = {}) => this.request({
+            path: `/eshelB/calculator/calculator/get_last_result`,
+            method: "GET",
+            format: "json",
+            ...params,
+        });
+        /**
+         * No description
+         *
+         * @tags Query
          * @name QueryMul
          * @summary Queries the result of a math operation
          * @request GET:/eshelB/calculator/calculator/mul

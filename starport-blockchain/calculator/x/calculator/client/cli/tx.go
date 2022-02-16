@@ -31,6 +31,9 @@ func GetTxCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdCalculateSum())
+	cmd.AddCommand(CmdCalculateMul())
+	cmd.AddCommand(CmdCalculateDiv())
+	cmd.AddCommand(CmdCalculateSub())
 	// this line is used by starport scaffolding # 1
 
 	return cmd

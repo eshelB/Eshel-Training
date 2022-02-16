@@ -11930,6 +11930,39 @@ paths:
           format: double
       tags:
         - Query
+  /eshelB/calculator/calculator/get_last_result:
+    get:
+      summary: Queries a list of GetLastResult items.
+      operationId: EshelBCalculatorCalculatorGetLastResult
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              result:
+                type: number
+                format: double
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /eshelB/calculator/calculator/mul:
     get:
       summary: Queries the result of a math operation
@@ -19971,8 +20004,26 @@ definitions:
     description: >-
       MsgCreateVestingAccountResponse defines the Msg/CreateVestingAccount
       response type.
+  eshelB.calculator.calculator.MsgCalculateDivResponse:
+    type: object
+    properties:
+      result:
+        type: string
+  eshelB.calculator.calculator.MsgCalculateMulResponse:
+    type: object
+    properties:
+      result:
+        type: string
+  eshelB.calculator.calculator.MsgCalculateSubResponse:
+    type: object
+    properties:
+      result:
+        type: string
   eshelB.calculator.calculator.MsgCalculateSumResponse:
     type: object
+    properties:
+      result:
+        type: string
   eshelB.calculator.calculator.Params:
     type: object
     description: Params defines the parameters for the module.
@@ -19983,6 +20034,12 @@ definitions:
         type: number
         format: double
   eshelB.calculator.calculator.QueryDivResponse:
+    type: object
+    properties:
+      result:
+        type: number
+        format: double
+  eshelB.calculator.calculator.QueryGetLastResultResponse:
     type: object
     properties:
       result:

@@ -570,6 +570,101 @@ export const QueryDivResponse = {
         return message;
     },
 };
+const baseQueryGetLastResultRequest = {};
+export const QueryGetLastResultRequest = {
+    encode(_, writer = Writer.create()) {
+        return writer;
+    },
+    decode(input, length) {
+        const reader = input instanceof Uint8Array ? new Reader(input) : input;
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = {
+            ...baseQueryGetLastResultRequest,
+        };
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+    fromJSON(_) {
+        const message = {
+            ...baseQueryGetLastResultRequest,
+        };
+        return message;
+    },
+    toJSON(_) {
+        const obj = {};
+        return obj;
+    },
+    fromPartial(_) {
+        const message = {
+            ...baseQueryGetLastResultRequest,
+        };
+        return message;
+    },
+};
+const baseQueryGetLastResultResponse = { result: 0 };
+export const QueryGetLastResultResponse = {
+    encode(message, writer = Writer.create()) {
+        if (message.result !== 0) {
+            writer.uint32(9).double(message.result);
+        }
+        return writer;
+    },
+    decode(input, length) {
+        const reader = input instanceof Uint8Array ? new Reader(input) : input;
+        let end = length === undefined ? reader.len : reader.pos + length;
+        const message = {
+            ...baseQueryGetLastResultResponse,
+        };
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1:
+                    message.result = reader.double();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+            }
+        }
+        return message;
+    },
+    fromJSON(object) {
+        const message = {
+            ...baseQueryGetLastResultResponse,
+        };
+        if (object.result !== undefined && object.result !== null) {
+            message.result = Number(object.result);
+        }
+        else {
+            message.result = 0;
+        }
+        return message;
+    },
+    toJSON(message) {
+        const obj = {};
+        message.result !== undefined && (obj.result = message.result);
+        return obj;
+    },
+    fromPartial(object) {
+        const message = {
+            ...baseQueryGetLastResultResponse,
+        };
+        if (object.result !== undefined && object.result !== null) {
+            message.result = object.result;
+        }
+        else {
+            message.result = 0;
+        }
+        return message;
+    },
+};
 export class QueryClientImpl {
     constructor(rpc) {
         this.rpc = rpc;
@@ -598,5 +693,10 @@ export class QueryClientImpl {
         const data = QueryDivRequest.encode(request).finish();
         const promise = this.rpc.request("eshelB.calculator.calculator.Query", "Div", data);
         return promise.then((data) => QueryDivResponse.decode(new Reader(data)));
+    }
+    GetLastResult(request) {
+        const data = QueryGetLastResultRequest.encode(request).finish();
+        const promise = this.rpc.request("eshelB.calculator.calculator.Query", "GetLastResult", data);
+        return promise.then((data) => QueryGetLastResultResponse.decode(new Reader(data)));
     }
 }

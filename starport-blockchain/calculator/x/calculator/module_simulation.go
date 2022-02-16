@@ -28,6 +28,18 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCalculateSum int = 100
 
+	opWeightMsgCalculateMul = "op_weight_msg_create_chain"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgCalculateMul int = 100
+
+	opWeightMsgCalculateDiv = "op_weight_msg_create_chain"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgCalculateDiv int = 100
+
+	opWeightMsgCalculateSub = "op_weight_msg_create_chain"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgCalculateSub int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -70,6 +82,39 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations = append(operations, simulation.NewWeightedOperation(
 		weightMsgCalculateSum,
 		calculatorsimulation.SimulateMsgCalculateSum(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgCalculateMul int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCalculateMul, &weightMsgCalculateMul, nil,
+		func(_ *rand.Rand) {
+			weightMsgCalculateMul = defaultWeightMsgCalculateMul
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgCalculateMul,
+		calculatorsimulation.SimulateMsgCalculateMul(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgCalculateDiv int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCalculateDiv, &weightMsgCalculateDiv, nil,
+		func(_ *rand.Rand) {
+			weightMsgCalculateDiv = defaultWeightMsgCalculateDiv
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgCalculateDiv,
+		calculatorsimulation.SimulateMsgCalculateDiv(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
+	var weightMsgCalculateSub int
+	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCalculateSub, &weightMsgCalculateSub, nil,
+		func(_ *rand.Rand) {
+			weightMsgCalculateSub = defaultWeightMsgCalculateSub
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgCalculateSub,
+		calculatorsimulation.SimulateMsgCalculateSub(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
 	// this line is used by starport scaffolding # simapp/module/operation

@@ -5,10 +5,16 @@ import { SigningStargateClient } from "@cosmjs/stargate";
 import { Registry, OfflineSigner, EncodeObject, DirectSecp256k1HdWallet } from "@cosmjs/proto-signing";
 import { Api } from "./rest";
 import { MsgCalculateSum } from "./types/calculator/tx";
+import { MsgCalculateMul } from "./types/calculator/tx";
+import { MsgCalculateDiv } from "./types/calculator/tx";
+import { MsgCalculateSub } from "./types/calculator/tx";
 
 
 const types = [
   ["/eshelB.calculator.calculator.MsgCalculateSum", MsgCalculateSum],
+  ["/eshelB.calculator.calculator.MsgCalculateMul", MsgCalculateMul],
+  ["/eshelB.calculator.calculator.MsgCalculateDiv", MsgCalculateDiv],
+  ["/eshelB.calculator.calculator.MsgCalculateSub", MsgCalculateSub],
   
 ];
 export const MissingWalletError = new Error("wallet is required");
@@ -42,6 +48,9 @@ const txClient = async (wallet: OfflineSigner, { addr: addr }: TxClientOptions =
   return {
     signAndBroadcast: (msgs: EncodeObject[], { fee, memo }: SignAndBroadcastOptions = {fee: defaultFee, memo: ""}) => client.signAndBroadcast(address, msgs, fee,memo),
     msgCalculateSum: (data: MsgCalculateSum): EncodeObject => ({ typeUrl: "/eshelB.calculator.calculator.MsgCalculateSum", value: MsgCalculateSum.fromPartial( data ) }),
+    msgCalculateMul: (data: MsgCalculateMul): EncodeObject => ({ typeUrl: "/eshelB.calculator.calculator.MsgCalculateMul", value: MsgCalculateMul.fromPartial( data ) }),
+    msgCalculateDiv: (data: MsgCalculateDiv): EncodeObject => ({ typeUrl: "/eshelB.calculator.calculator.MsgCalculateDiv", value: MsgCalculateDiv.fromPartial( data ) }),
+    msgCalculateSub: (data: MsgCalculateSub): EncodeObject => ({ typeUrl: "/eshelB.calculator.calculator.MsgCalculateSub", value: MsgCalculateSub.fromPartial( data ) }),
     
   };
 };

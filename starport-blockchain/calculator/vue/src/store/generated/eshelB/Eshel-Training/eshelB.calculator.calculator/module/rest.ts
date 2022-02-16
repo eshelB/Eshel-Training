@@ -9,7 +9,21 @@
  * ---------------------------------------------------------------
  */
 
-export type CalculatorMsgCalculateSumResponse = object;
+export interface CalculatorMsgCalculateDivResponse {
+  result?: string;
+}
+
+export interface CalculatorMsgCalculateMulResponse {
+  result?: string;
+}
+
+export interface CalculatorMsgCalculateSubResponse {
+  result?: string;
+}
+
+export interface CalculatorMsgCalculateSumResponse {
+  result?: string;
+}
 
 /**
  * Params defines the parameters for the module.
@@ -22,6 +36,11 @@ export interface CalculatorQueryAddResponse {
 }
 
 export interface CalculatorQueryDivResponse {
+  /** @format double */
+  result?: number;
+}
+
+export interface CalculatorQueryGetLastResultResponse {
   /** @format double */
   result?: number;
 }
@@ -281,6 +300,22 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       path: `/eshelB/calculator/calculator/div`,
       method: "GET",
       query: query,
+      format: "json",
+      ...params,
+    });
+
+  /**
+   * No description
+   *
+   * @tags Query
+   * @name QueryGetLastResult
+   * @summary Queries a list of GetLastResult items.
+   * @request GET:/eshelB/calculator/calculator/get_last_result
+   */
+  queryGetLastResult = (params: RequestParams = {}) =>
+    this.request<CalculatorQueryGetLastResultResponse, RpcStatus>({
+      path: `/eshelB/calculator/calculator/get_last_result`,
+      method: "GET",
       format: "json",
       ...params,
     });

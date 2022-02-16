@@ -49,6 +49,12 @@ export interface QueryDivResponse {
   result: number;
 }
 
+export interface QueryGetLastResultRequest {}
+
+export interface QueryGetLastResultResponse {
+  result: number;
+}
+
 const baseQueryParamsRequest: object = {};
 
 export const QueryParamsRequest = {
@@ -654,6 +660,127 @@ export const QueryDivResponse = {
   },
 };
 
+const baseQueryGetLastResultRequest: object = {};
+
+export const QueryGetLastResultRequest = {
+  encode(
+    _: QueryGetLastResultRequest,
+    writer: Writer = Writer.create()
+  ): Writer {
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetLastResultRequest {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetLastResultRequest,
+    } as QueryGetLastResultRequest;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(_: any): QueryGetLastResultRequest {
+    const message = {
+      ...baseQueryGetLastResultRequest,
+    } as QueryGetLastResultRequest;
+    return message;
+  },
+
+  toJSON(_: QueryGetLastResultRequest): unknown {
+    const obj: any = {};
+    return obj;
+  },
+
+  fromPartial(
+    _: DeepPartial<QueryGetLastResultRequest>
+  ): QueryGetLastResultRequest {
+    const message = {
+      ...baseQueryGetLastResultRequest,
+    } as QueryGetLastResultRequest;
+    return message;
+  },
+};
+
+const baseQueryGetLastResultResponse: object = { result: 0 };
+
+export const QueryGetLastResultResponse = {
+  encode(
+    message: QueryGetLastResultResponse,
+    writer: Writer = Writer.create()
+  ): Writer {
+    if (message.result !== 0) {
+      writer.uint32(9).double(message.result);
+    }
+    return writer;
+  },
+
+  decode(
+    input: Reader | Uint8Array,
+    length?: number
+  ): QueryGetLastResultResponse {
+    const reader = input instanceof Uint8Array ? new Reader(input) : input;
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = {
+      ...baseQueryGetLastResultResponse,
+    } as QueryGetLastResultResponse;
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+      switch (tag >>> 3) {
+        case 1:
+          message.result = reader.double();
+          break;
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+    return message;
+  },
+
+  fromJSON(object: any): QueryGetLastResultResponse {
+    const message = {
+      ...baseQueryGetLastResultResponse,
+    } as QueryGetLastResultResponse;
+    if (object.result !== undefined && object.result !== null) {
+      message.result = Number(object.result);
+    } else {
+      message.result = 0;
+    }
+    return message;
+  },
+
+  toJSON(message: QueryGetLastResultResponse): unknown {
+    const obj: any = {};
+    message.result !== undefined && (obj.result = message.result);
+    return obj;
+  },
+
+  fromPartial(
+    object: DeepPartial<QueryGetLastResultResponse>
+  ): QueryGetLastResultResponse {
+    const message = {
+      ...baseQueryGetLastResultResponse,
+    } as QueryGetLastResultResponse;
+    if (object.result !== undefined && object.result !== null) {
+      message.result = object.result;
+    } else {
+      message.result = 0;
+    }
+    return message;
+  },
+};
+
 /** Query defines the gRPC querier service. */
 export interface Query {
   /** Parameters queries the parameters of the module. */
@@ -666,6 +793,10 @@ export interface Query {
   Mul(request: QueryMulRequest): Promise<QueryMulResponse>;
   /** Queries the result of a math operation */
   Div(request: QueryDivRequest): Promise<QueryDivResponse>;
+  /** Queries a list of GetLastResult items. */
+  GetLastResult(
+    request: QueryGetLastResultRequest
+  ): Promise<QueryGetLastResultResponse>;
 }
 
 export class QueryClientImpl implements Query {
@@ -721,6 +852,20 @@ export class QueryClientImpl implements Query {
       data
     );
     return promise.then((data) => QueryDivResponse.decode(new Reader(data)));
+  }
+
+  GetLastResult(
+    request: QueryGetLastResultRequest
+  ): Promise<QueryGetLastResultResponse> {
+    const data = QueryGetLastResultRequest.encode(request).finish();
+    const promise = this.rpc.request(
+      "eshelB.calculator.calculator.Query",
+      "GetLastResult",
+      data
+    );
+    return promise.then((data) =>
+      QueryGetLastResultResponse.decode(new Reader(data))
+    );
   }
 }
 

@@ -1,4 +1,15 @@
-export declare type CalculatorMsgCalculateSumResponse = object;
+export interface CalculatorMsgCalculateDivResponse {
+    result?: string;
+}
+export interface CalculatorMsgCalculateMulResponse {
+    result?: string;
+}
+export interface CalculatorMsgCalculateSubResponse {
+    result?: string;
+}
+export interface CalculatorMsgCalculateSumResponse {
+    result?: string;
+}
 /**
  * Params defines the parameters for the module.
  */
@@ -8,6 +19,10 @@ export interface CalculatorQueryAddResponse {
     result?: number;
 }
 export interface CalculatorQueryDivResponse {
+    /** @format double */
+    result?: number;
+}
+export interface CalculatorQueryGetLastResultResponse {
     /** @format double */
     result?: number;
 }
@@ -117,6 +132,15 @@ export declare class Api<SecurityDataType extends unknown> extends HttpClient<Se
         x?: number;
         y?: number;
     }, params?: RequestParams) => Promise<HttpResponse<CalculatorQueryDivResponse, RpcStatus>>;
+    /**
+     * No description
+     *
+     * @tags Query
+     * @name QueryGetLastResult
+     * @summary Queries a list of GetLastResult items.
+     * @request GET:/eshelB/calculator/calculator/get_last_result
+     */
+    queryGetLastResult: (params?: RequestParams) => Promise<HttpResponse<CalculatorQueryGetLastResultResponse, RpcStatus>>;
     /**
      * No description
      *

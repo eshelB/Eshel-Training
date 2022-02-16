@@ -8,17 +8,50 @@ option go_package = "github.com/eshelB/Eshel-Training/calculator/x/calculator/ty
 // Msg defines the Msg service.
 service Msg {
       rpc CalculateSum(MsgCalculateSum) returns (MsgCalculateSumResponse);
+  rpc CalculateMul(MsgCalculateMul) returns (MsgCalculateMulResponse);
+  rpc CalculateDiv(MsgCalculateDiv) returns (MsgCalculateDivResponse);
+  rpc CalculateSub(MsgCalculateSub) returns (MsgCalculateSubResponse);
 // this line is used by starport scaffolding # proto/tx/rpc
 }
 
 message MsgCalculateSum {
   string creator = 1;
-   double x = 1;
-   double y = 2;
+  string x = 2;
+  string y = 3;
 }
 
 message MsgCalculateSumResponse {
-  double result = 1;
+  string result = 1;
+}
+
+message MsgCalculateMul {
+  string creator = 1;
+  string x = 2;
+  string y = 3;
+}
+
+message MsgCalculateMulResponse {
+  string result = 1;
+}
+
+message MsgCalculateDiv {
+  string creator = 1;
+  string x = 2;
+  string y = 3;
+}
+
+message MsgCalculateDivResponse {
+  string result = 1;
+}
+
+message MsgCalculateSub {
+  string creator = 1;
+  string x = 2;
+  string y = 3;
+}
+
+message MsgCalculateSubResponse {
+  string result = 1;
 }
 
 // this line is used by starport scaffolding # proto/tx/message
