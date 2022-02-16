@@ -1,0 +1,9 @@
+[Unit]
+Description=Full node height retrieval service
+
+[Service]
+Type=simple
+ExecStart=/home/esh/Training/full-nodes/record-stats.sh
+
+[Install]
+WantedBy=default.target
