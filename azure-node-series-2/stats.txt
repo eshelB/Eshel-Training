@@ -21,4 +21,9 @@ it again at 15:47 from the block it stopped.
 block 0x3ec42b at 15:49 feb 10
 block 0x404a3d at 19:50 feb 10
 block 0x4a235e at 17:08 feb 12
-block 0x4b8c07 at 17:08 feb 13
+block 0x4b8c07 at 10:20 feb 13
+block 0x4c7e14 at 19:29 feb 13
+block 0x4e3e08 at 10:19 feb 14
+block 0x4f8313 at 20:50 feb 14
+block 0x5197d7 at 12:42 feb 15
+block 0x523fc5 at 17:56 feb 15
