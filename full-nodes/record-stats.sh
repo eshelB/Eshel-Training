@@ -2,7 +2,7 @@
 date=$(date)
 
 # update expensive eth node stats
-data1=$(curl -s "20.71.225.176:8545" -X POST -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"eth_syncing","params": [],"id":1}')
+data1=$(curl -s "20.71.37.140:8545" -X POST -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"eth_syncing","params": [],"id":1}')
 echo got data for node eth expensive: $data1
 
 
@@ -15,7 +15,7 @@ echo saved stats to file
 
 
 # update cheaper eth node stats
-data2=$(curl -s "20.71.37.140:8545" -X POST -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"eth_syncing","params": [],"id":1}')
+data2=$(curl -s "20.71.225.176:8545" -X POST -H 'Content-Type: application/json' -d '{"jsonrpc":"2.0","method":"eth_syncing","params": [],"id":1}')
 echo got data for node eth cheap: $data2
 
 
