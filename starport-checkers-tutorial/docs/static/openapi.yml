@@ -20019,6 +20019,11 @@ definitions:
     properties:
       idValue:
         type: string
+  eshelB.mycheckers.mycheckers.MsgPlayMoveResponse:
+    type: object
+    properties:
+      idValue:
+        type: string
   eshelB.mycheckers.mycheckers.NextGame:
     type: object
     properties:
