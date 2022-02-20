@@ -3,6 +3,11 @@ export interface MycheckersMsgCreateGameResponse {
 }
 export interface MycheckersMsgPlayMoveResponse {
     idValue?: string;
+    /** @format int64 */
+    capturedX?: string;
+    /** @format int64 */
+    capturedY?: string;
+    winner?: string;
 }
 export interface MycheckersNextGame {
     creator?: string;
