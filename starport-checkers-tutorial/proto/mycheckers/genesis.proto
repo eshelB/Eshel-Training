@@ -1,0 +1,18 @@
+syntax = "proto3";
+package eshelB.mycheckers.mycheckers;
+
+import "gogoproto/gogo.proto";
+import "mycheckers/params.proto";
+import "mycheckers/next_game.proto";
+import "mycheckers/stored_game.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/eshelB/my-checkers/x/mycheckers/types";
+
+// GenesisState defines the mycheckers module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  NextGame nextGame = 2;
+  repeated StoredGame storedGameList = 3 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}

@@ -1,0 +1,24 @@
+syntax = "proto3";
+package eshelB.mycheckers.mycheckers;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/eshelB/my-checkers/x/mycheckers/types";
+
+// Msg defines the Msg service.
+service Msg {
+      rpc CreateGame(MsgCreateGame) returns (MsgCreateGameResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgCreateGame {
+  string creator = 1;
+  string red = 2;
+  string black = 3;
+}
+
+message MsgCreateGameResponse {
+  string idValue = 1;
+}
+
+// this line is used by starport scaffolding # proto/tx/message

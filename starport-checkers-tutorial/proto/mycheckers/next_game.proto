@@ -1,0 +1,9 @@
+syntax = "proto3";
+package eshelB.mycheckers.mycheckers;
+
+option go_package = "github.com/eshelB/my-checkers/x/mycheckers/types";
+
+message NextGame {
+  string creator = 1;
+  uint64 idValue = 2;
+}
