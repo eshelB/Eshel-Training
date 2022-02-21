@@ -8,5 +8,5 @@ import (
 
 // x/customminter module sentinel errors
 var (
-	ErrSample = sdkerrors.Register(ModuleName, 1100, "sample error")
+	ErrMintingCoins = sdkerrors.Register(ModuleName, 1100, "Error during the Mint.")
 )

@@ -7,7 +7,20 @@ option go_package = "github.com/eshelB/Training/starport-minter/x/customminter/t
 
 // Msg defines the Msg service.
 service Msg {
-    // this line is used by starport scaffolding # proto/tx/rpc
+      rpc Mint(MsgMint) returns (MsgMintResponse);
+// this line is used by starport scaffolding # proto/tx/rpc
+}
+
+message MsgMint {
+  string creator = 1;
+  string tokenName = 2;
+  uint64 quantity = 3;
+  uint32 decimals = 4;
+  string receivingAddress = 5;
+}
+
+message MsgMintResponse {
+  bool success = 1;
 }
 
 // this line is used by starport scaffolding # proto/tx/message
