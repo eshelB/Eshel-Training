@@ -1,0 +1,14 @@
+syntax = "proto3";
+package eshelB.starportminter.customminter;
+
+import "gogoproto/gogo.proto";
+import "customminter/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/eshelB/Training/starport-minter/x/customminter/types";
+
+// GenesisState defines the customminter module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+}

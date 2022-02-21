@@ -1,0 +1,12 @@
+syntax = "proto3";
+package eshelB.starportminter.customminter;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/eshelB/Training/starport-minter/x/customminter/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.goproto_stringer) = false;
+  
+}
