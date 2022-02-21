@@ -13,6 +13,8 @@ export interface MycheckersNextGame {
     creator?: string;
     /** @format uint64 */
     idValue?: string;
+    fifoHead?: string;
+    fifoTail?: string;
 }
 /**
  * Params defines the parameters for the module.
@@ -51,6 +53,13 @@ export interface MycheckersStoredGame {
     turn?: string;
     red?: string;
     black?: string;
+    /** @format uint64 */
+    moveCount?: string;
+    beforeId?: string;
+    afterId?: string;
+    winner?: string;
+    /** @format uint64 */
+    wager?: string;
 }
 export interface ProtobufAny {
     "@type"?: string;

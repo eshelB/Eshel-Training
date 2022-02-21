@@ -31,3 +31,29 @@ func (storedGame *StoredGame) ParseGame() (game *rules.Game, err error) {
 	}
 	return game, nil
 }
+
+func (storedGame *StoredGame) GetPlayerAddress(color string) (address sdk.AccAddress, found bool, err error) {
+	red, err := storedGame.GetRedPlayerAddress()
+	if err != nil {
+		return nil, false, err
+	}
+	black, err := storedGame.GetBlackPlayerAddress()
+	if err != nil {
+		return nil, false, err
+	}
+	address, found = map[string]sdk.AccAddress{
+		rules.RED_PLAYER.Color:   red,
+		rules.BLACK_PLAYER.Color: black,
+	}[color]
+	return address, found, nil
+}
+
+func (storedGame *StoredGame) GetWinnerAddress() (address sdk.AccAddress, found bool, err error) {
+	address, found, err = storedGame.GetPlayerAddress(storedGame.Winner)
+
+	return address, found, err
+}
+
+func (storedGame *StoredGame) GetWagerCoin() (wager sdk.Coin) {
+	return sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(int64(storedGame.Wager)))
+}

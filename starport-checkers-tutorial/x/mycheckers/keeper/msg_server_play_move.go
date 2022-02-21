@@ -14,6 +14,8 @@ import (
 func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*types.MsgPlayMoveResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	ctx.GasMeter().ConsumeGas(types.PlayMoveGas, "Play a move")
+
 	_ = ctx
 
 	storedGame, found := k.GetStoredGame(ctx, msg.IdValue)
@@ -21,6 +23,12 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 		return nil, sdkerrors.Wrapf(types.ErrGameNotFound, "game not found: %s", msg.IdValue)
 	}
 
+	// is game finished?
+	if storedGame.Winner != rules.NO_PLAYER.Color {
+		return nil, types.ErrGameFinished
+	}
+
+	// is expected player?
 	var player rules.Player
 	if strings.Compare(storedGame.Red, msg.Creator) == 0 {
 		player = rules.RED_PLAYER
@@ -39,6 +47,7 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 		return nil, types.ErrNotPlayerTurn
 	}
 
+	// make valid move
 	captured, moveErr := game.Move(
 		rules.Pos{int(msg.FromX), int(msg.FromY)},
 		rules.Pos{int(msg.ToX), int(msg.ToY)},
@@ -47,9 +56,26 @@ func (k msgServer) PlayMove(goCtx context.Context, msg *types.MsgPlayMove) (*typ
 		return nil, types.ErrWrongMove
 	}
 
+	// update the game itself
 	storedGame.Game = game.String()
 	storedGame.Turn = game.Turn.Color
+	storedGame.MoveCount++
+	storedGame.Winner = game.Winner().Color
+
+	// update the game in the fifo
+	nextGame, found := k.Keeper.GetNextGame(ctx)
+	if !found {
+		panic("NextGame not found")
+	}
+	if storedGame.Winner == rules.NO_PLAYER.Color {
+		k.Keeper.SendToFifoTail(ctx, &storedGame, &nextGame)
+	} else {
+		k.Keeper.RemoveFromFifo(ctx, &storedGame, &nextGame)
+		k.Keeper.MustPayWinnings(ctx, &storedGame)
+	}
+
 	k.SetStoredGame(ctx, storedGame)
+	k.Keeper.SetNextGame(ctx, nextGame)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(sdk.EventTypeMessage,

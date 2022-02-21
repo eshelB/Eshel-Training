@@ -11860,6 +11860,10 @@ paths:
                   idValue:
                     type: string
                     format: uint64
+                  fifoHead:
+                    type: string
+                  fifoTail:
+                    type: string
         default:
           description: An unexpected error response.
           schema:
@@ -11943,6 +11947,19 @@ paths:
                       type: string
                     black:
                       type: string
+                    moveCount:
+                      type: string
+                      format: uint64
+                    beforeId:
+                      type: string
+                    afterId:
+                      type: string
+                    winner:
+                      type: string
+                      title: note that omitted deadline
+                    wager:
+                      type: string
+                      format: uint64
               pagination:
                 type: object
                 properties:
@@ -12072,6 +12089,19 @@ paths:
                     type: string
                   black:
                     type: string
+                  moveCount:
+                    type: string
+                    format: uint64
+                  beforeId:
+                    type: string
+                  afterId:
+                    type: string
+                  winner:
+                    type: string
+                    title: note that omitted deadline
+                  wager:
+                    type: string
+                    format: uint64
         default:
           description: An unexpected error response.
           schema:
@@ -20040,6 +20070,10 @@ definitions:
       idValue:
         type: string
         format: uint64
+      fifoHead:
+        type: string
+      fifoTail:
+        type: string
   eshelB.mycheckers.mycheckers.Params:
     type: object
     description: Params defines the parameters for the module.
@@ -20063,6 +20097,19 @@ definitions:
               type: string
             black:
               type: string
+            moveCount:
+              type: string
+              format: uint64
+            beforeId:
+              type: string
+            afterId:
+              type: string
+            winner:
+              type: string
+              title: note that omitted deadline
+            wager:
+              type: string
+              format: uint64
       pagination:
         type: object
         properties:
@@ -20099,6 +20146,10 @@ definitions:
           idValue:
             type: string
             format: uint64
+          fifoHead:
+            type: string
+          fifoTail:
+            type: string
   eshelB.mycheckers.mycheckers.QueryGetStoredGameResponse:
     type: object
     properties:
@@ -20117,6 +20168,19 @@ definitions:
             type: string
           black:
             type: string
+          moveCount:
+            type: string
+            format: uint64
+          beforeId:
+            type: string
+          afterId:
+            type: string
+          winner:
+            type: string
+            title: note that omitted deadline
+          wager:
+            type: string
+            format: uint64
   eshelB.mycheckers.mycheckers.QueryParamsResponse:
     type: object
     properties:
@@ -20139,6 +20203,19 @@ definitions:
         type: string
       black:
         type: string
+      moveCount:
+        type: string
+        format: uint64
+      beforeId:
+        type: string
+      afterId:
+        type: string
+      winner:
+        type: string
+        title: note that omitted deadline
+      wager:
+        type: string
+        format: uint64
   ibc.applications.transfer.v1.DenomTrace:
     type: object
     properties:

@@ -29,6 +29,8 @@ export interface MycheckersNextGame {
 
   /** @format uint64 */
   idValue?: string;
+  fifoHead?: string;
+  fifoTail?: string;
 }
 
 /**
@@ -74,6 +76,15 @@ export interface MycheckersStoredGame {
   turn?: string;
   red?: string;
   black?: string;
+
+  /** @format uint64 */
+  moveCount?: string;
+  beforeId?: string;
+  afterId?: string;
+  winner?: string;
+
+  /** @format uint64 */
+  wager?: string;
 }
 
 export interface ProtobufAny {

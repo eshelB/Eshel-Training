@@ -17,4 +17,16 @@ var (
 	ErrCreatorNotPlayer = sdkerrors.Register(ModuleName, 1105, "message creator is not a player: %s")
 	ErrNotPlayerTurn    = sdkerrors.Register(ModuleName, 1106, "player tried to play out of turn: %s")
 	ErrWrongMove        = sdkerrors.Register(ModuleName, 1107, "wrong move")
+
+	// note that 3 errors where omitted (probably game rejection)
+	ErrGameFinished = sdkerrors.Register(ModuleName, 1108, "game is already finished")
+)
+var (
+	ErrRedCannotPay            = sdkerrors.Register(ModuleName, 1109, "red cannot pay the wager")
+	ErrBlackCannotPay          = sdkerrors.Register(ModuleName, 1110, "black cannot pay the wager")
+	ErrCannotFindWinnerByColor = sdkerrors.Register(ModuleName, 1111, "the winner of the game is not in the available colors")
+	ErrNothingToPay            = sdkerrors.Register(ModuleName, 1112, "there is nothing to pay, should not have been called")
+	ErrCannotRefundWager       = sdkerrors.Register(ModuleName, 1113, "cannot refund wager to: %s")
+	ErrCannotPayWinnings       = sdkerrors.Register(ModuleName, 1114, "cannot pay winnings to winner")
+	ErrNotInRefundState        = sdkerrors.Register(ModuleName, 1115, "game is not in a state to refund, move count: %d")
 )

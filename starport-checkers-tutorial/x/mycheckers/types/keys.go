@@ -41,3 +41,11 @@ const (
 	PlayMoveEventCapturedY = "CapturedY"
 	PlayMoveEventWinner    = "Winner"
 )
+
+const (
+	NoFifoIdKey = "-1"
+)
+
+const (
+	StoredGameEventWager = "Wager"
+)

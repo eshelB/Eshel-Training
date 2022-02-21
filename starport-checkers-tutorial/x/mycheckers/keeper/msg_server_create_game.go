@@ -11,6 +11,8 @@ import (
 func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (*types.MsgCreateGameResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	ctx.GasMeter().ConsumeGas(types.CreateGameGas, "Create game")
+
 	_ = ctx
 
 	nextGame, found := k.Keeper.GetNextGame(ctx)
@@ -27,6 +29,8 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 		Game:    rules.New().String(),
 		Red:     msg.Red,
 		Black:   msg.Black,
+		Winner:  rules.NO_PLAYER.Color,
+		Wager:   msg.Wager,
 	}
 
 	// todo implement Validate()
@@ -34,6 +38,8 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 	//if err != nil {
 	//	return nil, err
 	//}
+
+	k.Keeper.SendToFifoTail(ctx, &storedGame, &nextGame)
 
 	k.Keeper.SetStoredGame(ctx, storedGame)
 
@@ -48,6 +54,7 @@ func (k msgServer) CreateGame(goCtx context.Context, msg *types.MsgCreateGame) (
 			sdk.NewAttribute(types.StoredGameEventIndex, newIndex),
 			sdk.NewAttribute(types.StoredGameEventRed, msg.Red),
 			sdk.NewAttribute(types.StoredGameEventBlack, msg.Black),
+			sdk.NewAttribute(types.StoredGameEventWager, strconv.FormatUint(msg.Wager, 10)),
 		),
 	)
 

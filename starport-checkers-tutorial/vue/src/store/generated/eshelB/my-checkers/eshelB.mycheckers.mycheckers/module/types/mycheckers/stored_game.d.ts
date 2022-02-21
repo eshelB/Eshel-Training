@@ -7,6 +7,12 @@ export interface StoredGame {
     turn: string;
     red: string;
     black: string;
+    moveCount: number;
+    beforeId: string;
+    afterId: string;
+    /** note that omitted deadline */
+    winner: string;
+    wager: number;
 }
 export declare const StoredGame: {
     encode(message: StoredGame, writer?: Writer): Writer;
