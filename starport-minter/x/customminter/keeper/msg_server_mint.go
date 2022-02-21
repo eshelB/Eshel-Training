@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"fmt"
+	"math"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +12,8 @@ import (
 )
 
 func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
+	fmt.Println("recienved tx to mint", msg.TokenName)
+
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	_ = ctx
@@ -35,7 +39,7 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 	}
 
 	// creator sets the quantity of the coins denominated in the specified unit, not the base
-	displayQuantity := sdk.NewInt(int64(msg.Quantity * (10 ^ uint64(msg.Decimals))))
+	displayQuantity := sdk.NewInt(int64(msg.Quantity * uint64(math.Pow(10, float64(msg.Decimals)))))
 
 	coin := sdk.NewCoin(baseName, displayQuantity)
 
