@@ -12,7 +12,7 @@ import (
 )
 
 func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMintResponse, error) {
-	fmt.Println("recienved tx to mint", msg.TokenName)
+	fmt.Println("received mint tx", msg.TokenName)
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
