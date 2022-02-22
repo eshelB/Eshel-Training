@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"fmt"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"math"
 	"strings"
 
@@ -17,6 +18,10 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	_ = ctx
+
+	if msg.Decimals > types.MaxDecimals {
+		return nil, sdkerrors.Wrapf(types.ErrTooManyDecimals, "The maximum number of decimals is %d", types.MaxDecimals)
+	}
 
 	baseName := msg.TokenName + "-base"
 
@@ -49,11 +54,6 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 	}
 
 	k.bankKeeper.SetDenomMetaData(ctx, denomMetaData)
-
-	err = k.bankKeeper.MintCoins(ctx, types.ModuleName, []sdk.Coin{coin})
-	if err != nil {
-		return nil, types.ErrMintingCoins
-	}
 
 	recipient, err := sdk.AccAddressFromBech32(msg.ReceivingAddress)
 	if err != nil {
