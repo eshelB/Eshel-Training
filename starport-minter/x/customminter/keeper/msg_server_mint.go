@@ -57,14 +57,12 @@ func (k msgServer) Mint(goCtx context.Context, msg *types.MsgMint) (*types.MsgMi
 
 	recipient, err := sdk.AccAddressFromBech32(msg.ReceivingAddress)
 	if err != nil {
-		// todo: maybe better to return error?
-		panic(err)
+		return nil, types.ErrInvalidRecipient
 	}
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, []sdk.Coin{coin})
 	if err != nil {
-		// todo: maybe better to return error?
-		panic(err)
+		return nil, err
 	}
 
 	return &types.MsgMintResponse{}, nil
