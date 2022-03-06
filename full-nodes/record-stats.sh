@@ -6,12 +6,12 @@ date=$(date)
 #echo got data for node eth expensive: $data1
 
 
-[[ $data1 =~ currentBlock\":\"(.*?)\",\"healedBytecodeBytes ]]
-height1=${BASH_REMATCH[1]}
-echo -e "height eth expensive is $height1\n"
+#[[ $data1 =~ currentBlock\":\"(.*?)\",\"healedBytecodeBytes ]]
+#height1=${BASH_REMATCH[1]}
+#echo -e "height eth expensive is $height1\n"
 
-printf "%s: the block height was %s\n" "$date" "$height1" >> ~/Training/full-nodes/eth-full-node-expensive/stats.txt
-echo saved stats to file
+#printf "%s: the block height was %s\n" "$date" "$height1" >> ~/Training/full-nodes/eth-full-node-expensive/stats.txt
+#echo saved stats to file
 
 
 # update cheaper eth node stats

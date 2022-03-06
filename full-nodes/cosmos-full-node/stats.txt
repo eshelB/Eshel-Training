@@ -48,14 +48,8 @@ Wed 23 Feb 2022 10:33:08 IST: the block height was 6779042
 Wed 23 Feb 2022 13:34:10 IST: the block height was 6798937
 Wed 23 Feb 2022 16:35:10 IST: the block height was 6818129
 Thu 24 Feb 2022 10:32:23 IST: the block height was 
-Thu 24 Feb 2022 13:33:24 IST: the block height was 
-Thu 24 Feb 2022 16:33:37 IST: the block height was 
-Sun 27 Feb 2022 01:53:49 IST: the block height was 
-Sun 27 Feb 2022 01:56:24 IST: the block height was 
-Sun 27 Feb 2022 04:59:13 IST: the block height was 
-Sun 27 Feb 2022 08:00:13 IST: the block height was 
-Sun 27 Feb 2022 11:01:13 IST: the block height was 
-Sun 27 Feb 2022 14:02:13 IST: the block height was 
-Sun 27 Feb 2022 17:03:13 IST: the block height was 
-Sun 27 Feb 2022 20:04:13 IST: the block height was 
-Mon 28 Feb 2022 10:13:01 IST: the block height was 
+# here the upgrade has to be manually set up
+Wed 02 Mar 2022 10:59:22 IST: the block height was 7107124
+Wed 02 Mar 2022 14:00:22 IST: the block height was 7139064
+Wed 02 Mar 2022 17:01:22 IST: the block height was 7169287
+Fri 04 Mar 2022 03:30:51 IST: the block height was 7455215

@@ -52,10 +52,7 @@ Sun 20 Feb 2022 09:30:19 IST: the block height was 0xc2756d
 Sun 20 Feb 2022 12:31:19 IST: the block height was 0xc33287
 Sun 20 Feb 2022 15:32:19 IST: the block height was 0xc3edc4
 Sun 20 Feb 2022 18:33:19 IST: the block height was 0xc4a45b
-Sun 20 Feb 2022 21:35:40 IST: the block height was 
-Mon 21 Feb 2022 01:19:58 IST: the block height was 
 Mon 21 Feb 2022 11:17:06 IST: the block height was 0xc8a6f6
-Mon 21 Feb 2022 14:17:24 IST: the block height was 
 Mon 21 Feb 2022 17:19:24 IST: the block height was 0xca2655
 Mon 21 Feb 2022 20:20:24 IST: the block height was 0xcae3c3
 Tue 22 Feb 2022 00:26:33 IST: the block height was 0xcbe6d6
