@@ -45,7 +45,6 @@ pub enum HandleAnswer {
 pub enum QueryAnswer {
     // add QueryMsg response types here
     Stats {
-        status: String,
         reminder_count: u64,
-    }
+    },
 }
