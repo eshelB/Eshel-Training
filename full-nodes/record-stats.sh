@@ -27,14 +27,24 @@ printf "%s: the block height was %s\n" "$date" "$height2" >> ~/Training/full-nod
 echo saved stats to file
 
 # update cosmos node stats
-#curl -s "52.234.1.90:26657/block" | grep height
-
 data3=$(curl -s "52.234.1.90:26657/block" | grep height | tail -n 1)
-echo got data for node eth cheap: $data3
+echo got data for cosmos node: $data3
 
 [[ $data3 =~ height\":\ \"(.*?)\", ]]
 height3=${BASH_REMATCH[1]}
 echo -e "height cosmos is $height3\n"
 
 printf "%s: the block height was %s\n" "$date" "$height3" >> ~/Training/full-nodes/cosmos-full-node/stats.txt
+echo saved stats to file
+
+
+# update secret node stats
+data4=$(curl -s "51.142.106.235:26657/block" | grep height | tail -n 1)
+echo got data for secret node: $data4
+
+[[ $data4 =~ height\":\ \"(.*?)\", ]]
+height4=${BASH_REMATCH[1]}
+echo -e "height secret is $height4\n"
+
+printf "%s: the block height was %s\n" "$date" "$height4" >> ~/Training/full-nodes/secret-full-node/stats.txt
 echo saved stats to file
