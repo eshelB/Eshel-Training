@@ -37,4 +37,3 @@ pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]
         None => Ok(None),
     }
 }
-

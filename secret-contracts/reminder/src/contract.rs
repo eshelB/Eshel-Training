@@ -87,6 +87,7 @@ fn try_record<S: Storage, A: Api, Q: Querier>(
         })?),
     })
 }
+
 fn try_read<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
