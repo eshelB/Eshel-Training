@@ -44,7 +44,15 @@ echo got data for secret node: $data4
 
 [[ $data4 =~ height\":\ \"(.*?)\", ]]
 height4=${BASH_REMATCH[1]}
-echo -e "height secret is $height4\n"
+echo height secret is $height4
 
-printf "%s: the block height was %s\n" "$date" "$height4" >> ~/Training/full-nodes/secret-full-node/stats.txt
+totaldata=$(curl -s "http://peer.node.scrtlabs.com:26657/block" | grep height | tail -n 1)
+echo got total data for secret node: $totaldata
+[[ $totaldata =~ height\":\ \"(.*?)\", ]]
+total=${BASH_REMATCH[1]}
+echo "total: $total"
+
+percent=$(bc <<< "scale=3; $height4/$total*100")
+echo "percent: $percent"
+printf "%s - height: %s, total: %s, percentage: %s\n" "$date" "$height4" "$total" "$percent" >> ~/Training/full-nodes/secret-full-node/stats.txt
 echo saved stats to file

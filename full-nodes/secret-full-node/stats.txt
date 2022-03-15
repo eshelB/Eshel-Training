@@ -2,3 +2,5 @@ Set up the node at 18:49
 Sun 13 Mar 2022 20:23:39 IST: the block height was 839899
 Mon 14 Mar 2022 16:53:55 IST: the block height was 932240
 Mon 14 Mar 2022 19:54:05 IST: the block height was 973714
+Tue 15 Mar 2022 10:42:22 IST: the block height was 1032291
+Tue 15 Mar 2022 12:06:42 IST - height: 1035653, total: 2535573, percentage: 40.800
