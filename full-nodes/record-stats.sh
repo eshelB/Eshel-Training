@@ -52,7 +52,7 @@ echo got total data for secret node: $totaldata
 total=${BASH_REMATCH[1]}
 echo "total: $total"
 
-percent=$(bc <<< "scale=3; $height4/$total*100")
+percent=$(bc <<< "scale=3; $height4*100.00/$total")
 echo "percent: $percent"
 printf "%s - height: %s, total: %s, percentage: %s\n" "$date" "$height4" "$total" "$percent" >> ~/Training/full-nodes/secret-full-node/stats.txt
 echo saved stats to file
