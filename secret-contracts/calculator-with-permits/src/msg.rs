@@ -14,14 +14,18 @@ pub enum HandleMsg {
     Mul { calculation: Calculation::BinaryCalculation },
     Div { calculation: Calculation::BinaryCalculation },
     Sqrt { calculation: Calculation::UnaryCalculation },
-    GetPastCalculation { index: u64 }
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 // no queries for this contract, only txs since we need the user's address to
 // perform and read calculations
-pub enum QueryMsg {}
+pub enum QueryMsg {
+    CalculationHistory {
+        page: u64,
+        page_size: u64,
+    },
+}
 
 // We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -33,6 +37,7 @@ pub enum Calculation {
     },
     UnaryCalculation {
         operand: u64,
+        //todo maybe add padding
     },
 }
 

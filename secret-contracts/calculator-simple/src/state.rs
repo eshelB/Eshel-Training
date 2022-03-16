@@ -4,7 +4,7 @@ use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, StdError};
 use serde::de::DeserializeOwned;
 use secret_toolkit::serialization::{Bincode2, Serde};
 
-pub static USER_STATS_PREFIX: &[u8] = b"user_stats_";
+pub static USER_STATS_PREFIX: &[u8] = b"user_stats";
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct UserStats {
