@@ -30,49 +30,76 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
         HandleMsg::Mul { calculation } => try_mul(deps, calculation),
         HandleMsg::Div { calculation } => try_div(deps, calculation),
         HandleMsg::Sqrt { calculation } => try_sqrt(deps, calculation),
-
-        // HandleMsg::Sqrt { calculation } => try_sqrt(deps, calculation),
-
-        // HandleMsg::GetPast { calculation } => try_sqrt(deps, calculation),
-
-        // PastCalculation { index: i64 },
-        // TotalCalculations { },
-
-        // HandleMsg::Reset { count } => try_reset(deps, env, count),
+        HandleMsg::PastCalculation { index } => try_past_calculation(deps, env, index),
+        HandleMsg::TotalCalculations { } => try_total_calculations(deps, env),
     };
 
-    Ok(result.unwrap())
+    result
 }
 
-pub fn try_sub<S: Storage, A: Api, Q: Querier>(
+fn try_total_calculations<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: Env,
+) -> StdResult<HandleAnswer> {
+    Ok(HandleAnswer::TotalCalculationsAnswer { status: "".to_string(), calculation_count: 0 })
+}
+
+fn try_past_calculation<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: Env,
+    requested_index: u64,
+) -> StdResult<HandleAnswer> {
+    let sender_address = deps.api.canonical_address(&env.message.sender)?;
+    let storage_key = [requested_index.to_string().as_bytes(), sender_address.as_slice()].concat();
+    println!("loading calculation from history with key: {:?}", String::from_utf8(storage_key.clone()).unwrap());
+    let calculation_stored: Option<PastCalculation> = may_load(&deps.storage, &storage_key).ok().unwrap();
+
+    match calculation_stored {
+        Some(calculation) => {
+            println!("got calculation from history");
+            Ok(HandleAnswer::PastCalculationAnswer {
+                status: String::from("Calculation requested successfully"),
+                calculation: Some(calculation),
+            })
+        }
+        None => {
+            Ok(HandleAnswer::PastCalculationAnswer {
+                status: String::from("No such calculation for user"),
+                calculation: None,
+            })
+        }
+    }
+}
+
+fn try_sub<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     _calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     Ok(HandleAnswer::AddAnswer { result: 1 })
 }
 
-pub fn try_mul<S: Storage, A: Api, Q: Querier>(
+fn try_mul<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     _calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     Ok(HandleAnswer::AddAnswer { result: 1 })
 }
 
-pub fn try_div<S: Storage, A: Api, Q: Querier>(
+fn try_div<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     _calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     Ok(HandleAnswer::AddAnswer { result: 1 })
 }
 
-pub fn try_sqrt<S: Storage, A: Api, Q: Querier>(
+fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     _calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     Ok(HandleAnswer::AddAnswer { result: 1 })
 }
 
-pub fn try_add<S: Storage, A: Api, Q: Querier>(
+fn try_add<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     calculation: Calculation,
@@ -113,7 +140,7 @@ pub fn try_add<S: Storage, A: Api, Q: Querier>(
 
     // let user_stats_key = format!("{}{}", String::from(USER_STATS_PREFIX), &sender_address.to_string()).as_slice().to_vec();
     let user_stats_key = [USER_STATS_PREFIX, &sender_address.as_slice()].concat();
-    println!("loading sender's state from key: {}", String::from_utf8(user_stats_key.clone()).unwrap());
+    println!("loading sender's stats from key: {}", String::from_utf8(user_stats_key.clone()).unwrap());
     let user_stats: Option<UserStats> = may_load(&deps.storage, &user_stats_key).ok().unwrap();
 
     let current_count: u64 = match user_stats {
@@ -123,16 +150,17 @@ pub fn try_add<S: Storage, A: Api, Q: Querier>(
 
     let new_count = current_count + 1;
 
-    let storage_key = format!("{}{}", current_count, &sender_address.to_string());
-    println!("saving calculation to history on key: {}", storage_key);
+    let storage_key = [current_count.to_string().as_bytes(), sender_address.as_slice()].concat();
+    println!("saving calculation to history on key: {:?}", String::from_utf8(storage_key.clone()).unwrap());
+    // let storage_key_bytes: Vec<u8> = storage_key.as_slice().to_vec();
     save(&mut deps.storage, &storage_key.as_slice().to_vec(), &stored_calculation)?;
     println!("saved calculation to history");
 
-    println!("saving new user stats: count={}, on key: {}", new_count, user_stats_key);
+    println!("saving new user stats: count={}, on key: {:?}", new_count, String::from_utf8(user_stats_key.clone()).unwrap());
     save(&mut deps.storage, &user_stats_key, &stored_calculation)?;
     println!("saved new user stats");
 
-    debug_print("operation add saved history successfully");
+    debug_print("Add: saved history successfully");
     Ok(HandleAnswer::AddAnswer { result })
 }
 
@@ -154,11 +182,6 @@ mod tests {
     fn add() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
 
-        let msg = InitMsg {};
-        let env = mock_env("creator", &coins(2, "token"));
-        let _res = init(&mut deps, env, msg).unwrap();
-
-        // anyone can add
         let env = mock_env("anyone", &coins(2, "token"));
         let msg = HandleMsg::Add {
             calculation: Calculation::BinaryCalculation {
@@ -167,28 +190,50 @@ mod tests {
             }
         };
         let _res = handle(&mut deps, env, msg).unwrap();
-        let raw_result = match _res {
-            HandleAnswer::AddAnswer { result } => result,
+        match _res {
+            HandleAnswer::AddAnswer { result } => assert_eq!(result, 7),
             _ => panic!(),
         };
-        assert_eq!(raw_result, 7);
 
+        // check that it was saved to history
+        let msg = HandleMsg::PastCalculation { index: 0 };
+        let env = mock_env("anyone", &coins(2, "token"));
 
-        let msg = HandleMsg::Add {
-            calculation: Calculation::BinaryCalculation {
-                left_operand: 3,
-                right_operand: 4,
-            }
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::PastCalculationAnswer { status, calculation } => {
+                assert_eq!(calculation.unwrap(), PastCalculation {
+                    left_operand: 3,
+                    right_operand: Some(4),
+                    operation: "Add".as_bytes().to_vec(),
+                    result: 7,
+                });
+            },
+            _ => assert!(false),
         };
 
-        // todo check that calculation was saved to the user's history
+        let msg = HandleMsg::PastCalculation { index: 1 };
+        let env = mock_env("anyone", &coins(2, "token"));
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::PastCalculationAnswer { status, calculation } => {
+                assert_eq!(status, "No such calculation for user");
+                assert_eq!(calculation, None);
+            },
+            _ => assert!(false),
+        };
+
+        // todo check total calculations query
+        // let msg = HandleMsg::TotalCalculations { };
         // let env = mock_env("anyone", &coins(2, "token"));
         // let _res = handle(&mut deps, env, msg).unwrap();
-        // let raw_result = match _res {
-        //     HandleAnswer::AddAnswer { result } => result,
-        //     _ => panic!(),
+        // match _res {
+        //     HandleAnswer::TotalCalculationsAnswer { status, calculation_count } => {
+        //         assert_eq!(status, "No such calculation for user");
+        //         assert_eq!(calculation_count, 2);
+        //     },
+        //     _ => assert!(false),
         // };
-        // assert_eq!(raw_result, 7);
     }
 
     // #[test]

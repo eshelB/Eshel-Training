@@ -15,8 +15,8 @@ pub enum HandleMsg {
     Mul { calculation: Calculation },
     Div { calculation: Calculation },
     Sqrt { calculation: Calculation },
-    // PastCalculation { index: i64 },
-    // TotalCalculations { },
+    PastCalculation { index: u64 },
+    TotalCalculations { },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -53,7 +53,7 @@ pub enum HandleAnswer {
     },
     TotalCalculationsAnswer {
         status: String,
-        calculation_count: Option<PastCalculation>,
+        calculation_count: u64,
     }
 }
 
