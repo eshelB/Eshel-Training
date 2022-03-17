@@ -1,7 +1,10 @@
+//todo remove warning allowance
+#![allow(unused_imports, unused_variables)]
 use std::{any::type_name};
 use serde::{Deserialize, Serialize};
-use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, StdError};
 use serde::de::DeserializeOwned;
+use schemars::JsonSchema;
+use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, StdError};
 use secret_toolkit::serialization::{Bincode2, Serde};
 
 pub static USER_STATS_PREFIX: &[u8] = b"user_stats";
@@ -11,12 +14,13 @@ pub struct UserStats {
     pub calculation_count: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PastCalculation {
-    pub left_operand: u64,
-    pub right_operand: u64,
+    pub left_operand: i64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub right_operand: Option<i64>,
     pub operation: Vec<u8>,
-    pub result: u64,
+    pub result: i64,
 }
 
 pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {

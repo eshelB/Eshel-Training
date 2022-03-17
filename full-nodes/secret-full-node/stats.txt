@@ -14,3 +14,8 @@ Wed 16 Mar 2022 12:01:55 IST - height: 1093589, total: 2549418, percentage: 42.8
 Wed 16 Mar 2022 15:02:55 IST - height: 1117864, total: 2551136, percentage: 43.818
 Wed 16 Mar 2022 18:03:55 IST - height: 1140900, total: 2552831, percentage: 44.691
 Wed 16 Mar 2022 21:04:55 IST - height: 1163453, total: 2554538, percentage: 45.544
+Thu 17 Mar 2022 00:05:55 IST - height: 1188611, total: 2556249, percentage: 46.498
+Thu 17 Mar 2022 03:06:55 IST - height: , total: , percentage: 
+Thu 17 Mar 2022 06:07:55 IST - height: , total: , percentage: 
+Thu 17 Mar 2022 09:08:55 IST - height: , total: , percentage: 
+Thu 17 Mar 2022 12:09:06 IST - height: 1290720, total: 2563251, percentage: 50.354
