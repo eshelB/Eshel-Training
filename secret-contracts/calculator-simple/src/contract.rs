@@ -187,6 +187,8 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
         Calculation::UnaryCalculation { operand } => operand,
     };
 
+    // Maybe a better approach would have been to define the input as unsigned, but then
+    // the UnaryCalculation either is not used, or becomes less generic
     if radicand < 0 {
         return Err(StdError::GenericErr {
             msg: "Radicand can't be negative on Sqrt operation".to_string(),
@@ -195,6 +197,7 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     }
 
     // square root rounds to the nearest integer to avoid floating point discrepancies
+    // todo: maybe use cosmwasm_std::Decimal.sqrt() instead
     let result = (radicand as f64).sqrt() as u64;
 
     let calculation = PastCalculation {
