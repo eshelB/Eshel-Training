@@ -17,7 +17,7 @@ pub struct UserStats {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct PastCalculation {
     pub left_operand: i64,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    // #[serde(skip_serializing_if = "Option::is_none")] // todo find a way to make this load 'None' if present
     pub right_operand: Option<i64>,
     pub operation: Vec<u8>,
     pub result: i64,

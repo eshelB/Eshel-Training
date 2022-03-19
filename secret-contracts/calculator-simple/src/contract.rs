@@ -63,23 +63,22 @@ fn try_past_calculation<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<HandleAnswer> {
     let sender_address = deps.api.canonical_address(&env.message.sender)?;
     let storage_key = [requested_index.to_string().as_bytes(), sender_address.as_slice()].concat();
-    println!("loading calculation from history with key: {:?}", String::from_utf8(storage_key.clone()).unwrap());
-    let calculation_stored: Option<PastCalculation> = may_load(&deps.storage, &storage_key).ok().unwrap();
+    // println!("loading calculation from history with key: {:?}", String::from_utf8(storage_key.clone()).unwrap());
+    let calculation_stored: Option<PastCalculation> = may_load(&deps.storage, &storage_key)?;
+    // let calculation_found = calculation_stored.unwrap();
 
     match calculation_stored {
         Some(calculation) => {
             println!("got calculation from history");
             Ok(HandleAnswer::PastCalculationAnswer {
-                status: String::from("Calculation requested successfully"),
+                status: "Calculation requested successfully".to_string(),
                 calculation: Some(calculation),
             })
         }
-        None => {
-            Ok(HandleAnswer::PastCalculationAnswer {
-                status: String::from("No such calculation for user"),
-                calculation: None,
-            })
-        }
+        None => Ok(HandleAnswer::PastCalculationAnswer {
+            status: "No such calculation for user".to_string(),
+            calculation: None,
+        })
     }
 }
 
@@ -93,7 +92,7 @@ fn save_calculation<S: Storage, A: Api, Q: Querier>(
     // save the calculation on the key: [sender's calculation_count] + [sender's address]
     let user_stats_key = [USER_STATS_PREFIX, &sender_address.as_slice()].concat();
     println!("loading sender's stats from key: {}", String::from_utf8(user_stats_key.clone()).unwrap());
-    let user_stats: Option<UserStats> = may_load(&deps.storage, &user_stats_key).ok().unwrap();
+    let user_stats: Option<UserStats> = may_load(&deps.storage, &user_stats_key).unwrap();
 
     let current_count: u64 = match user_stats {
         Some(stats) => stats.calculation_count,
@@ -151,7 +150,7 @@ fn try_mul<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Mul: saved history successfully");
-    Ok(HandleAnswer::AddAnswer { result })
+    Ok(HandleAnswer::MulAnswer { result })
 }
 
 fn try_div<S: Storage, A: Api, Q: Querier>(
@@ -172,33 +171,43 @@ fn try_div<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Div: saved history successfully");
-    Ok(HandleAnswer::AddAnswer { result })
+    Ok(HandleAnswer::DivAnswer { result })
 }
 
-fn try_div<S: Storage, A: Api, Q: Querier>(
+fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
-    let single_operand = match calculation {
+    let radicand = match calculation {
         Calculation::BinaryCalculation {..} => return Err(StdError::GenericErr {
-            msg: "This method should be called with two operands".to_string(),
+            msg: "This method should be called with one operand".to_string(),
             backtrace: None,
         }),
         Calculation::UnaryCalculation { operand } => operand,
     };
 
+    if radicand < 0 {
+        return Err(StdError::GenericErr {
+            msg: "Radicand can't be negative on Sqrt operation".to_string(),
+            backtrace: None,
+        })
+    }
+
+    // square root rounds to the nearest integer to avoid floating point discrepancies
+    let result = (radicand as f64).sqrt() as u64;
+
     let calculation = PastCalculation {
-        left_operand: single_operand,
+        left_operand: radicand,
         right_operand: None,
         operation: "Sqrt".as_bytes().to_vec(),
-        result: result,
+        result: result as i64,
     };
 
     save_calculation(deps, calculation, env)?;
 
-    debug_print("Div: saved history successfully");
-    Ok(HandleAnswer::AddAnswer { result })
+    debug_print("Sqrt: saved history successfully");
+    Ok(HandleAnswer::SqrtAnswer { result })
 }
 
 fn get_operands(binary_calculation: Calculation) -> StdResult<(i64, i64)> {
@@ -259,8 +268,8 @@ mod tests {
         // initial calculation count for account should be 0
         let msg = HandleMsg::TotalCalculations { };
         let env = mock_env("anyone", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
+        let res = handle(&mut deps, env, msg).unwrap();
+        match res {
             HandleAnswer::TotalCalculationsAnswer { status, calculation_count } => {
                 assert_eq!(status, "Successfully got the number of calculations by account".to_string());
                 assert_eq!(calculation_count, 0);
@@ -268,7 +277,7 @@ mod tests {
             _ => assert!(false),
         };
 
-        // add result
+        // check add result
         let env = mock_env("anyone", &coins(2, "token"));
         let msg = HandleMsg::Add {
             calculation: Calculation::BinaryCalculation {
@@ -289,12 +298,16 @@ mod tests {
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
             HandleAnswer::PastCalculationAnswer { status, calculation } => {
-                assert_eq!(calculation.unwrap(), PastCalculation {
-                    left_operand: 3,
-                    right_operand: Some(4),
-                    operation: "Add".as_bytes().to_vec(),
-                    result: 7,
-                });
+                assert_eq!(status, "Calculation requested successfully".to_string());
+                match calculation {
+                    Some(calculation) => assert_eq!(calculation, PastCalculation {
+                        left_operand: 3,
+                        right_operand: Some(4),
+                        operation: "Add".as_bytes().to_vec(),
+                        result: 7,
+                    }),
+                    None => assert!(false),
+                }
             },
             _ => assert!(false),
         };
@@ -305,8 +318,8 @@ mod tests {
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
             HandleAnswer::PastCalculationAnswer { status, calculation } => {
-                assert_eq!(status, "No such calculation for user");
                 assert_eq!(calculation, None);
+                assert_eq!(status, "No such calculation for user");
             },
             _ => assert!(false),
         };
@@ -333,7 +346,7 @@ mod tests {
         };
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::AddAnswer { result } => assert_eq!(result, 7),
+            HandleAnswer::AddAnswer { result } => assert_eq!(result, -6),
             _ => panic!(),
         };
 
@@ -371,19 +384,7 @@ mod tests {
     fn sub() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
 
-        // initial calculation count for account should be 0
-        let msg = HandleMsg::TotalCalculations { };
-        let env = mock_env("anyone", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
-            HandleAnswer::TotalCalculationsAnswer { status, calculation_count } => {
-                assert_eq!(status, "Successfully got the number of calculations by account".to_string());
-                assert_eq!(calculation_count, 0);
-            },
-            _ => assert!(false),
-        };
-
-        // sub result
+        // check sub result
         let env = mock_env("anyone", &coins(2, "token"));
         let msg = HandleMsg::Sub {
             calculation: Calculation::BinaryCalculation {
@@ -443,19 +444,6 @@ mod tests {
     fn mul() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
 
-        // initial calculation count for account should be 0
-        let msg = HandleMsg::TotalCalculations { };
-        let env = mock_env("anyone", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
-            HandleAnswer::TotalCalculationsAnswer { status, calculation_count } => {
-                assert_eq!(status, "Successfully got the number of calculations by account".to_string());
-                assert_eq!(calculation_count, 0);
-            },
-            _ => assert!(false),
-        };
-
-        // mul result
         let env = mock_env("anyone", &coins(2, "token"));
         let msg = HandleMsg::Mul {
             calculation: Calculation::BinaryCalculation {
@@ -465,7 +453,7 @@ mod tests {
         };
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::AddAnswer { result } => assert_eq!(result, -12),
+            HandleAnswer::MulAnswer { result } => assert_eq!(result, -12),
             _ => panic!(),
         };
 
@@ -477,7 +465,7 @@ mod tests {
         match _res {
             HandleAnswer::PastCalculationAnswer { status, calculation } => {
                 assert_eq!(calculation.unwrap(), PastCalculation {
-                    left_operand: -3,
+                    left_operand: 3,
                     right_operand: Some(-4),
                     operation: "Mul".as_bytes().to_vec(),
                     result: -12,
@@ -491,21 +479,9 @@ mod tests {
     fn div() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
 
-        // initial calculation count for account should be 0
-        let msg = HandleMsg::TotalCalculations { };
+        // check mul result
         let env = mock_env("anyone", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
-            HandleAnswer::TotalCalculationsAnswer { status, calculation_count } => {
-                assert_eq!(status, "Successfully got the number of calculations by account".to_string());
-                assert_eq!(calculation_count, 0);
-            },
-            _ => assert!(false),
-        };
-
-        // mul result
-        let env = mock_env("anyone", &coins(2, "token"));
-        let msg = HandleMsg::Mul {
+        let msg = HandleMsg::Div {
             calculation: Calculation::BinaryCalculation {
                 left_operand: 7,
                 right_operand: 3,
@@ -513,7 +489,7 @@ mod tests {
         };
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::AddAnswer { result } => assert_eq!(result, 2),
+            HandleAnswer::DivAnswer { result } => assert_eq!(result, 2),
             _ => panic!(),
         };
 
@@ -527,7 +503,7 @@ mod tests {
                 assert_eq!(calculation.unwrap(), PastCalculation {
                     left_operand: 7,
                     right_operand: Some(3),
-                    operation: "Mul".as_bytes().to_vec(),
+                    operation: "Div".as_bytes().to_vec(),
                     result: 2,
                 });
             },
@@ -535,31 +511,39 @@ mod tests {
         };
     }
 
-    // #[test]
-    // fn reset() {
-    //     let mut deps = mock_dependencies(20, &coins(2, "token"));
-    //
-    //     let msg = InitMsg { count: 17 };
-    //     let env = mock_env("creator", &coins(2, "token"));
-    //     let _res = init(&mut deps, env, msg).unwrap();
-    //
-    //     // not anyone can reset
-    //     let unauth_env = mock_env("anyone", &coins(2, "token"));
-    //     let msg = HandleMsg::Reset { count: 5 };
-    //     let res = handle(&mut deps, unauth_env, msg);
-    //     match res {
-    //         Err(StdError::Unauthorized { .. }) => {}
-    //         _ => panic!("Must return unauthorized error"),
-    //     }
-    //
-    //     // only the original creator can reset the counter
-    //     let auth_env = mock_env("creator", &coins(2, "token"));
-    //     let msg = HandleMsg::Reset { count: 5 };
-    //     let _res = handle(&mut deps, auth_env, msg).unwrap();
-    //
-    //     // should now be 5
-    //     let res = query(&deps, QueryMsg::GetCount {}).unwrap();
-    //     let value: CountResponse = from_binary(&res).unwrap();
-    //     assert_eq!(5, value.count);
-    // }
+    #[test]
+    fn sqrt() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        // check sqrt result
+        let env = mock_env("anyone", &coins(2, "token"));
+        let msg = HandleMsg::Sqrt {
+            calculation: Calculation::UnaryCalculation {
+                operand: 37,
+            }
+        };
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::SqrtAnswer { result } => assert_eq!(result, 6),
+            _ => panic!(),
+        };
+
+        // check that it was saved to history
+        let msg = HandleMsg::PastCalculation { index: 0 };
+        let env = mock_env("anyone", &coins(2, "token"));
+
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::PastCalculationAnswer { status, calculation } => {
+                assert_eq!(status, "Calculation requested successfully".to_string());
+                assert_eq!(calculation.unwrap(), PastCalculation {
+                    left_operand: 37,
+                    right_operand: None,
+                    operation: "Sqrt".as_bytes().to_vec(),
+                    result: 6,
+                });
+            },
+            _ => assert!(false),
+        };
+    }
 }
