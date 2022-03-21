@@ -1,6 +1,10 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::PastCalculation;
+use crate::state::StoredCalculation;
+use secret_toolkit::permit::Permit;
+use cosmwasm_std::Binary;
+
+pub type QueryResponse = Binary;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // nothing to initialize in this contract
@@ -15,17 +19,35 @@ pub enum HandleMsg {
     Mul { calculation: Calculation },
     Div { calculation: Calculation },
     Sqrt { calculation: Calculation },
-    PastCalculation { index: u64 },
-    TotalCalculations { },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-// no queries for this contract, only txs since we need the user's address to
-// perform and read calculations
-pub enum QueryMsg {}
+pub enum QueryMsg {
+    WithPermit {
+        permit: Permit,
+        query: QueryWithPermit,
+    },
+}
 
-// We define a custom struct for each query response
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryWithPermit {
+    CalculationHistory {
+        page: Option<u32>,
+        page_size: u32,
+    },
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum QueryAnswer {
+    CalculationHistory {
+        txs: Vec<StoredCalculation>,
+        total: Option<u64>,
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Calculation {
@@ -47,14 +69,4 @@ pub enum HandleAnswer {
     MulAnswer { result: i64 },
     DivAnswer { result: i64 },
     SqrtAnswer { result: u64 },
-    PastCalculationAnswer {
-        status: String,
-        calculation: Option<PastCalculation>,
-    },
-    TotalCalculationsAnswer {
-        status: String,
-        calculation_count: u64,
-    }
 }
-
-pub struct QueryAnswer {}

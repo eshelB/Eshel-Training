@@ -1,6 +1,5 @@
-// todo remove unused
-#![allow(unused_imports, unused_variables)]
-// use cosmwasm_std::{debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier, StdError, StdResult, Storage, HumanAddr};
+#![allow(unused_imports, unused_variables)] // todo remove warning allowance
+
 use cosmwasm_std::{debug_print, Api, Env, Extern, Querier, StdError, StdResult, Storage, CanonicalAddr};
 
 use crate::msg::{Calculation, HandleMsg, InitMsg, InitAnswer, QueryMsg, HandleAnswer, QueryAnswer};

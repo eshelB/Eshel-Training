@@ -25,7 +25,6 @@ pub enum HandleMsg {
 // perform and read calculations
 pub enum QueryMsg {}
 
-// We define a custom struct for each query response
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Calculation {

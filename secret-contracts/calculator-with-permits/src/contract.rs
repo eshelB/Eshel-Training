@@ -1,10 +1,19 @@
-// todo remove unused
-#![allow(unused_imports, unused_variables)]
-// use cosmwasm_std::{debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, InitResponse, Querier, StdError, StdResult, Storage, HumanAddr};
-use cosmwasm_std::{debug_print, Api, Env, Extern, Querier, StdError, StdResult, Storage, CanonicalAddr};
+#![allow(unused_imports, unused_variables)] // todo remove warning allowance
 
-use crate::msg::{Calculation, HandleMsg, InitMsg, InitAnswer, QueryMsg, HandleAnswer, QueryAnswer};
-use crate::state::{save, may_load, UserStats, PastCalculation, USER_STATS_PREFIX};
+use cosmwasm_std::{
+    Api, Env, Extern, Querier, StdError, StdResult, Storage, CanonicalAddr,
+    HumanAddr, Binary, debug_print, to_binary, QueryResult
+};
+use secret_toolkit::permit::{
+    validate, Permission, Permit, RevokedPermits,
+    PermitParams,
+};
+
+use crate::msg::{
+    Calculation, HandleMsg, InitMsg, InitAnswer, QueryMsg,
+    HandleAnswer, QueryAnswer, QueryWithPermit
+};
+use crate::state::{PREFIX_CALCULATION, StoredCalculation, save, append_calculation, get_calculations};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
@@ -12,7 +21,7 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     _msg: InitMsg,
 ) -> StdResult<InitAnswer> {
     debug_print!("Contract was initialized by {}", env.message.sender);
-    Ok(InitAnswer{ })
+    Ok(InitAnswer { })
 }
 
 pub fn handle<S: Storage, A: Api, Q: Querier>(
@@ -24,91 +33,22 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     // debug_print!("handle was by triggered by {}", sender);
     debug_print!("handle was by triggered");
 
-    let result = match msg {
+    match msg {
         HandleMsg::Add { calculation } => try_add(deps, env, calculation),
         HandleMsg::Sub { calculation } => try_sub(deps, env, calculation),
         HandleMsg::Mul { calculation } => try_mul(deps, env, calculation),
         HandleMsg::Div { calculation } => try_div(deps, env, calculation),
         HandleMsg::Sqrt { calculation } => try_sqrt(deps, env, calculation),
-        HandleMsg::PastCalculation { index } => try_past_calculation(deps, env, index),
-        HandleMsg::TotalCalculations { } => try_total_calculations(deps, env),
-    };
-
-    result
-}
-
-fn try_total_calculations<S: Storage, A: Api, Q: Querier>(
-    deps: &mut Extern<S, A, Q>,
-    env: Env,
-) -> StdResult<HandleAnswer> {
-    let sender_address = deps.api.canonical_address(&env.message.sender)?;
-
-    let user_stats_key = [USER_STATS_PREFIX, &sender_address.as_slice()].concat();
-    println!("loading sender's stats from key: {}", String::from_utf8(user_stats_key.clone()).unwrap());
-    let user_stats: Option<UserStats> = may_load(&deps.storage, &user_stats_key).ok().unwrap();
-
-    Ok(HandleAnswer::TotalCalculationsAnswer {
-        status: "Successfully got the number of calculations by account".to_string(),
-        calculation_count: match user_stats {
-            Some(stats) => stats.calculation_count,
-            None => 0,
-        },
-    })
-}
-
-fn try_past_calculation<S: Storage, A: Api, Q: Querier>(
-    deps: &mut Extern<S, A, Q>,
-    env: Env,
-    requested_index: u64,
-) -> StdResult<HandleAnswer> {
-    let sender_address = deps.api.canonical_address(&env.message.sender)?;
-    let storage_key = [requested_index.to_string().as_bytes(), sender_address.as_slice()].concat();
-    // println!("loading calculation from history with key: {:?}", String::from_utf8(storage_key.clone()).unwrap());
-    let calculation_stored: Option<PastCalculation> = may_load(&deps.storage, &storage_key)?;
-    // let calculation_found = calculation_stored.unwrap();
-
-    match calculation_stored {
-        Some(calculation) => {
-            println!("got calculation from history");
-            Ok(HandleAnswer::PastCalculationAnswer {
-                status: "Calculation requested successfully".to_string(),
-                calculation: Some(calculation),
-            })
-        }
-        None => Ok(HandleAnswer::PastCalculationAnswer {
-            status: "No such calculation for user".to_string(),
-            calculation: None,
-        })
     }
 }
 
 fn save_calculation<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
-    calculation: PastCalculation,
+    calculation: StoredCalculation,
     env: Env,
 ) -> StdResult<()>{
-    let sender_address = deps.api.canonical_address(&env.message.sender)?;
-
-    // save the calculation on the key: [sender's calculation_count] + [sender's address]
-    let user_stats_key = [USER_STATS_PREFIX, &sender_address.as_slice()].concat();
-    println!("loading sender's stats from key: {}", String::from_utf8(user_stats_key.clone()).unwrap());
-    let user_stats: Option<UserStats> = may_load(&deps.storage, &user_stats_key).unwrap();
-
-    let current_count: u64 = match user_stats {
-        Some(stats) => stats.calculation_count,
-        None => 0,
-    };
-
-    let new_count = current_count + 1;
-
-    let storage_key = [current_count.to_string().as_bytes(), sender_address.as_slice()].concat();
-    println!("saving calculation to history on key: {:?}", String::from_utf8(storage_key.clone()).unwrap());
-    // let storage_key_bytes: Vec<u8> = storage_key.as_slice().to_vec();
-    save(&mut deps.storage, &storage_key.as_slice().to_vec(), &calculation)?;
-    println!("saved calculation to history");
-
-    println!("saving new user stats: count={}, on key: {:?}", new_count, String::from_utf8(user_stats_key.clone()).unwrap());
-    save(&mut deps.storage, &user_stats_key, &new_count)
+    let sender = deps.api.canonical_address(&env.message.sender)?;
+    append_calculation(&mut deps.storage, &calculation, &sender)
 }
 
 fn try_sub<S: Storage, A: Api, Q: Querier>(
@@ -119,7 +59,7 @@ fn try_sub<S: Storage, A: Api, Q: Querier>(
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
     let result = left_operand - right_operand;
 
-    let calculation = PastCalculation {
+    let calculation = StoredCalculation {
         left_operand: left_operand,
         right_operand: Some(right_operand),
         operation: "Sub".as_bytes().to_vec(),
@@ -140,7 +80,7 @@ fn try_mul<S: Storage, A: Api, Q: Querier>(
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
     let result = left_operand * right_operand;
 
-    let calculation = PastCalculation {
+    let calculation = StoredCalculation {
         left_operand: left_operand,
         right_operand: Some(right_operand),
         operation: "Mul".as_bytes().to_vec(),
@@ -161,7 +101,7 @@ fn try_div<S: Storage, A: Api, Q: Querier>(
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
     let result = left_operand / right_operand;
 
-    let calculation = PastCalculation {
+    let calculation = StoredCalculation {
         left_operand: left_operand,
         right_operand: Some(right_operand),
         operation: "Div".as_bytes().to_vec(),
@@ -200,7 +140,7 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     // todo: maybe use cosmwasm_std::Decimal.sqrt() instead
     let result = (radicand as f64).sqrt() as u64;
 
-    let calculation = PastCalculation {
+    let calculation = StoredCalculation {
         left_operand: radicand,
         right_operand: None,
         operation: "Sqrt".as_bytes().to_vec(),
@@ -237,7 +177,7 @@ fn try_add<S: Storage, A: Api, Q: Querier>(
     println!("macro print: {}", debug_message);
     debug_print(debug_message);
 
-    let calculation = PastCalculation {
+    let calculation = StoredCalculation {
         left_operand: left_operand,
         right_operand: Some(right_operand),
         operation: "Add".as_bytes().to_vec(),
@@ -251,11 +191,49 @@ fn try_add<S: Storage, A: Api, Q: Querier>(
 }
 
 pub fn query<S: Storage, A: Api, Q: Querier>(
-    _deps: &Extern<S, A, Q>,
-    _msg: QueryMsg,
-) -> StdResult<QueryAnswer> {
-    // no queries in simple implementation of this contract
-    Ok(QueryAnswer {})
+    deps: &Extern<S, A, Q>,
+    msg: QueryMsg,
+) -> QueryResult {
+    match msg {
+        QueryMsg::WithPermit { permit, query } => permit_queries(deps, permit, query),
+    }
+}
+
+pub fn permit_queries<S: Storage, A: Api, Q: Querier>(
+    deps: &Extern<S, A, Q>,
+    permit: Permit,
+    query: QueryWithPermit,
+) -> QueryResult {
+    let account = validate(deps, &"", &permit, HumanAddr("todo".to_string()))?;
+
+    match query {
+        QueryWithPermit::CalculationHistory { page, page_size } => {
+            // todo add permission, or if it's not extensible, find a way to use my own permissions
+            if !permit.check_permission(&Permission::History) {
+                return Err(StdError::generic_err(format!(
+                    "No permission to query history, got permissions {:?}",
+                    permit.params.permissions
+                )));
+            }
+
+            query_calculation_history(deps, &account, page.unwrap_or(0), page_size)
+        }
+    }
+}
+
+pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
+    deps: &Extern<S, A, Q>,
+    account: &HumanAddr,
+    page: u32,
+    page_size: u32,
+) -> StdResult<Binary> {
+    let address = deps.api.canonical_address(account)?;
+    let (txs, total) = get_calculations(&deps.api, &deps.storage, &address, page, page_size)?;
+
+    to_binary(&QueryAnswer::CalculationHistory {
+        txs,
+        total: Some(total),
+    })
 }
 
 #[cfg(test)]
@@ -268,8 +246,23 @@ mod tests {
     fn add() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
 
-        // initial calculation count for account should be 0
-        let msg = HandleMsg::TotalCalculations { };
+        // initial calculation history for an account should be unexistent
+        let permit = "";
+        let msg = QueryMsg::WithPermit {
+            permit: Permit {
+                params: PermitParams {
+                    allowed_tokens: Vec<HumanAddr>,
+                    permit_name: String,
+                    chain_id: String,
+                    permissions: Vec<Permission>,
+                },
+                signature: PermitSignature {}
+            },
+            query: QueryWithPermit::CalculationHistory {
+                page: Some(),
+                page_size: u32,
+            }
+        };
         let env = mock_env("anyone", &coins(2, "token"));
         let res = handle(&mut deps, env, msg).unwrap();
         match res {
@@ -295,15 +288,15 @@ mod tests {
         };
 
         // check that it was saved to history
-        let msg = HandleMsg::PastCalculation { index: 0 };
+        let msg = HandleMsg::StoredCalculation { index: 0 };
         let env = mock_env("anyone", &coins(2, "token"));
 
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
                 assert_eq!(status, "Calculation requested successfully".to_string());
                 match calculation {
-                    Some(calculation) => assert_eq!(calculation, PastCalculation {
+                    Some(calculation) => assert_eq!(calculation, StoredCalculation {
                         left_operand: 3,
                         right_operand: Some(4),
                         operation: "Add".as_bytes().to_vec(),
@@ -316,11 +309,11 @@ mod tests {
         };
 
         // check history of unexisting index
-        let msg = HandleMsg::PastCalculation { index: 1 };
+        let msg = HandleMsg::StoredCalculation { index: 1 };
         let env = mock_env("anyone", &coins(2, "token"));
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
                 assert_eq!(calculation, None);
                 assert_eq!(status, "No such calculation for user");
             },
@@ -354,13 +347,13 @@ mod tests {
         };
 
         // check that it was saved to history
-        let msg = HandleMsg::PastCalculation { index: 1 };
+        let msg = HandleMsg::StoredCalculation { index: 1 };
         let env = mock_env("anyone", &coins(2, "token"));
 
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
-                assert_eq!(calculation.unwrap(), PastCalculation {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
+                assert_eq!(calculation.unwrap(), StoredCalculation {
                     left_operand: 3,
                     right_operand: Some(-9),
                     operation: "Add".as_bytes().to_vec(),
@@ -402,13 +395,13 @@ mod tests {
         };
 
         // check that it was saved to history
-        let msg = HandleMsg::PastCalculation { index: 0 };
+        let msg = HandleMsg::StoredCalculation { index: 0 };
         let env = mock_env("anyone", &coins(2, "token"));
 
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
-                assert_eq!(calculation.unwrap(), PastCalculation {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
+                assert_eq!(calculation.unwrap(), StoredCalculation {
                     left_operand: -3,
                     right_operand: Some(-1),
                     operation: "Sub".as_bytes().to_vec(),
@@ -419,11 +412,11 @@ mod tests {
         };
 
         // check history of unexisting index
-        let msg = HandleMsg::PastCalculation { index: 1 };
+        let msg = HandleMsg::StoredCalculation { index: 1 };
         let env = mock_env("anyone", &coins(2, "token"));
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
                 assert_eq!(status, "No such calculation for user");
                 assert_eq!(calculation, None);
             },
@@ -461,13 +454,13 @@ mod tests {
         };
 
         // check that it was saved to history
-        let msg = HandleMsg::PastCalculation { index: 0 };
+        let msg = HandleMsg::StoredCalculation { index: 0 };
         let env = mock_env("anyone", &coins(2, "token"));
 
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
-                assert_eq!(calculation.unwrap(), PastCalculation {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
+                assert_eq!(calculation.unwrap(), StoredCalculation {
                     left_operand: 3,
                     right_operand: Some(-4),
                     operation: "Mul".as_bytes().to_vec(),
@@ -497,13 +490,13 @@ mod tests {
         };
 
         // check that it was saved to history
-        let msg = HandleMsg::PastCalculation { index: 0 };
+        let msg = HandleMsg::StoredCalculation { index: 0 };
         let env = mock_env("anyone", &coins(2, "token"));
 
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
-                assert_eq!(calculation.unwrap(), PastCalculation {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
+                assert_eq!(calculation.unwrap(), StoredCalculation {
                     left_operand: 7,
                     right_operand: Some(3),
                     operation: "Div".as_bytes().to_vec(),
@@ -532,14 +525,14 @@ mod tests {
         };
 
         // check that it was saved to history
-        let msg = HandleMsg::PastCalculation { index: 0 };
+        let msg = HandleMsg::StoredCalculation { index: 0 };
         let env = mock_env("anyone", &coins(2, "token"));
 
         let _res = handle(&mut deps, env, msg).unwrap();
         match _res {
-            HandleAnswer::PastCalculationAnswer { status, calculation } => {
+            HandleAnswer::StoredCalculationAnswer { status, calculation } => {
                 assert_eq!(status, "Calculation requested successfully".to_string());
-                assert_eq!(calculation.unwrap(), PastCalculation {
+                assert_eq!(calculation.unwrap(), StoredCalculation {
                     left_operand: 37,
                     right_operand: None,
                     operation: "Sqrt".as_bytes().to_vec(),
