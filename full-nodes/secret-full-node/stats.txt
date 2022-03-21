@@ -31,3 +31,16 @@ Fri 18 Mar 2022 19:12:58 IST - height: 1490880, total: 2580764, percentage: 57.7
 Fri 18 Mar 2022 22:13:58 IST - height: 1508860, total: 2582496, percentage: 58.426
 Sat 19 Mar 2022 01:14:58 IST - height: 1527036, total: 2584219, percentage: 59.090
 Sat 19 Mar 2022 04:15:58 IST - height: 1547146, total: 2586006, percentage: 59.827
+Sat 19 Mar 2022 07:16:58 IST - height: , total: , percentage: 
+Sat 19 Mar 2022 10:17:58 IST - height: , total: , percentage: 
+Sat 19 Mar 2022 13:18:58 IST - height: , total: , percentage: 
+Sat 19 Mar 2022 16:19:58 IST - height: 1611839, total: 2593018, percentage: 62.160
+Sat 19 Mar 2022 19:20:58 IST - height: 1629905, total: 2594754, percentage: 62.815
+Sat 19 Mar 2022 22:21:58 IST - height: 1643397, total: 2596493, percentage: 63.292
+Sun 20 Mar 2022 01:22:58 IST - height: 1654201, total: 2598262, percentage: 63.665
+Sun 20 Mar 2022 04:23:58 IST - height: 1670802, total: 2600056, percentage: 64.260
+Sun 20 Mar 2022 07:24:58 IST - height: 1688314, total: 2601833, percentage: 64.889
+Sun 20 Mar 2022 10:25:58 IST - height: 1705790, total: 2603582, percentage: 65.517
+Sun 20 Mar 2022 13:26:58 IST - height: 1721969, total: 2605410, percentage: 66.092
+Sun 20 Mar 2022 16:27:58 IST - height: 1729154, total: 2607169, percentage: 66.323
+Sun 20 Mar 2022 19:28:58 IST - height: 1740490, total: 2608953, percentage: 66.712

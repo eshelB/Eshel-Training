@@ -146,3 +146,15 @@ Fri 18 Mar 2022 19:12:58 IST: the block height was 0x8e58e8
 Fri 18 Mar 2022 22:13:58 IST: the block height was 0x8e89ab
 Sat 19 Mar 2022 01:14:58 IST: the block height was 0x8eba21
 Sat 19 Mar 2022 04:15:58 IST: the block height was 0x8eedf2
+Sat 19 Mar 2022 07:16:58 IST: the block height was 
+Sat 19 Mar 2022 10:17:58 IST: the block height was 
+Sat 19 Mar 2022 13:18:58 IST: the block height was 
+Sat 19 Mar 2022 16:19:58 IST: the block height was 0x8fa6a5
+Sat 19 Mar 2022 19:20:58 IST: the block height was 0x8fcf29
+Sat 19 Mar 2022 22:21:58 IST: the block height was 0x8ff2d0
+Sun 20 Mar 2022 01:22:58 IST: the block height was 0x9014b6
+Sun 20 Mar 2022 04:23:58 IST: the block height was 0x903e44
+Sun 20 Mar 2022 07:24:58 IST: the block height was 0x906706
+Sun 20 Mar 2022 10:25:58 IST: the block height was 0x9087e4
+// then the machine was deleted
+Sun 20 Mar 2022 13:26:58 IST: the block height was -
