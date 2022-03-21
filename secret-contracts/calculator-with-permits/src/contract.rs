@@ -1,18 +1,16 @@
-#![allow(unused_imports, unused_variables)] // todo remove warning allowance
-
 use cosmwasm_std::{
-    Api, Env, Extern, Querier, StdError, StdResult, Storage, CanonicalAddr,
+    Api, Env, Extern, Querier, StdError, StdResult, Storage,
     HumanAddr, Binary, debug_print, to_binary, QueryResult
 };
 use crate::permit::{
-    validate, Permission, Permit, RevokedPermits,
+    validate, Permission, Permit, // RevokedPermits,
 };
 
 use crate::msg::{
     Calculation, HandleMsg, InitMsg, InitAnswer, QueryMsg,
     HandleAnswer, QueryAnswer, QueryWithPermit
 };
-use crate::state::{PREFIX_CALCULATION, StoredCalculation, save, append_calculation, get_calculations};
+use crate::state::{StoredCalculation, append_calculation, get_calculations};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
@@ -68,7 +66,7 @@ fn try_sub<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Sub: saved history successfully");
-    Ok(HandleAnswer::AddAnswer { result })
+    Ok(HandleAnswer::SubAnswer { result })
 }
 
 fn try_mul<S: Storage, A: Api, Q: Querier>(
@@ -157,7 +155,7 @@ fn get_operands(binary_calculation: Calculation) -> StdResult<(i64, i64)> {
         Calculation::BinaryCalculation { left_operand, right_operand } => {
             Ok((left_operand, right_operand))
         },
-        Calculation::UnaryCalculation { operand } => return Err(StdError::GenericErr {
+        Calculation::UnaryCalculation { operand: _ } => return Err(StdError::GenericErr {
             msg: "This method should be called with two operands".to_string(),
             backtrace: None,
         }),
@@ -241,21 +239,18 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
-    use cosmwasm_std::{coins, from_binary, StdError};
-    use crate::msg::QueryResponse;
-    use crate::permit::{PermitParams, PermitSignature, PubKey};
-    use serde_json::{Value};
+    use cosmwasm_std::{coins};
 
     #[test]
-    fn add() {
+    fn bad_permit() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
 
-        // initial calculation history for an account should be unexistent
-        let permit = r#"{
+        // invalid permit: the given signature signed chain_id="secret-4"
+        let bad_permit = r#"{
             "params": {
                 "permit_name":"test",
                 "allowed_contracts": ["thisaddress"],
-                "chain_id": "secret-4",
+                "chain_id": "secret-5",
                 "permissions": ["calculation_history"]
             },
             "signature": {
@@ -268,23 +263,296 @@ mod tests {
         }"#;
 
         let msg = QueryMsg::WithPermit {
-            permit: serde_json::from_str(&permit).unwrap(),
+            permit: serde_json::from_str(&bad_permit).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: 3,
             }
         };
 
-        let env = mock_env("secret148rqk0r5u6ddaf5ynfw2wagd7gyy95h2s9jlv4", &coins(2, "token"));
+        let res = query(&mut deps, msg);
+        match res {
+            StdResult::Ok(_res) => assert!(false),
+            StdResult::Err(e) => {
+                // println!("{:?}", e);
+                let expected_error = cosmwasm_std::StdError::GenericErr {
+                    msg: "Failed to verify signatures for the given permit: IncorrectSignature".to_string(),
+                    backtrace: None
+                };
+                assert_eq!(e, expected_error);
+            }
+        }
+    }
+
+    const PERMIT: &str = r#"{
+        "params": {
+            "permit_name":"test",
+            "allowed_contracts": ["thisaddress"],
+            "chain_id": "secret-4",
+            "permissions": ["calculation_history"]
+        },
+        "signature": {
+            "pub_key": {
+                "type": "tendermint/PubKeySecp256k1",
+                "value":"A31nYb+/VgwXsjhgmdkRotRexaDmgblDlhQja/rtEKwW"
+            },
+            "signature":"uHgywngtXSRaQcg4CFEJkExQN/VUgo7ul12zar/vwghtUiY3JPZQKPt7GpuV/WuDM94FRI4YuD7beA3w9JpnBA=="
+        }
+    }"#;
+
+    #[test]
+    fn add() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        // initial calculation history for an account should be unexistent
+        let msg = QueryMsg::WithPermit {
+            permit: serde_json::from_str(&PERMIT).unwrap(),
+            query: QueryWithPermit::CalculationHistory {
+                page: None,
+                page_size: 3,
+            }
+        };
+
         let res = query(&mut deps, msg);
         match res {
             StdResult::Ok(raw_res) => {
-                assert_eq!(raw_res.to_string(), "yes please".to_string())
+                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                println!("the result is: {:?}", deserialized_result);
+                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
+                    calcs: vec![],
+                    total: Some(0),
+                });
             },
-            StdResult::Err(e) => {
-                panic!("{:?}", e);
-                // println!("the error is: {:?}", e)
+            StdResult::Err(_e) => assert!(false)
+        }
+
+        let msg = HandleMsg::Add {
+             calculation: Calculation::BinaryCalculation {
+                 left_operand: 12,
+                 right_operand: 30
+             },
+        };
+        // it must be this key since that is who signed the previous query
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::AddAnswer { result } => assert_eq!(result, 42),
+            _ => assert!(false),
+        };
+
+        let msg = QueryMsg::WithPermit {
+            permit: serde_json::from_str(&PERMIT).unwrap(),
+            query: QueryWithPermit::CalculationHistory {
+                page: None,
+                page_size: 3,
+            }
+        };
+
+        let res = query(&mut deps, msg);
+        match res {
+            StdResult::Ok(raw_res) => {
+                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                println!("the result is: {:?}", deserialized_result);
+                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
+                    calcs: vec![StoredCalculation{
+                        left_operand: 12,
+                        right_operand: Some(30),
+                        operation: "Add".as_bytes().to_vec(),
+                        result: 42
+                    }],
+                    total: Some(1),
+                });
             },
+            StdResult::Err(_e) => assert!(false)
+        }
+    }
+
+    #[test]
+    fn sub() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let msg = HandleMsg::Sub {
+            calculation: Calculation::BinaryCalculation {
+                left_operand: 123,
+                right_operand: 300
+            },
+        };
+
+        // it must be this key since that is who signed the query
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::SubAnswer { result } => assert_eq!(result, -177),
+            _ => assert!(false),
+        };
+
+        let msg = QueryMsg::WithPermit {
+            permit: serde_json::from_str(&PERMIT).unwrap(),
+            query: QueryWithPermit::CalculationHistory {
+                page: None,
+                page_size: 3,
+            }
+        };
+
+        let res = query(&mut deps, msg);
+        match res {
+            StdResult::Ok(raw_res) => {
+                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                println!("the result is: {:?}", deserialized_result);
+                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
+                    calcs: vec![StoredCalculation{
+                        left_operand: 123,
+                        right_operand: Some(300),
+                        operation: "Sub".as_bytes().to_vec(),
+                        result: -177
+                    }],
+                    total: Some(1),
+                });
+            },
+            StdResult::Err(_e) => assert!(false)
+        }
+    }
+
+    #[test]
+    fn mul() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let msg = HandleMsg::Mul {
+            calculation: Calculation::BinaryCalculation {
+                left_operand: 23,
+                right_operand: 50
+            },
+        };
+
+        // it must be this key since that is who signed the query
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::MulAnswer { result } => assert_eq!(result, 1150),
+            _ => assert!(false),
+        };
+
+        let msg = QueryMsg::WithPermit {
+            permit: serde_json::from_str(&PERMIT).unwrap(),
+            query: QueryWithPermit::CalculationHistory {
+                page: None,
+                page_size: 3,
+            }
+        };
+
+        let res = query(&mut deps, msg);
+        match res {
+            StdResult::Ok(raw_res) => {
+                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                println!("the result is: {:?}", deserialized_result);
+                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
+                    calcs: vec![StoredCalculation{
+                        left_operand: 23,
+                        right_operand: Some(50),
+                        operation: "Mul".as_bytes().to_vec(),
+                        result: 1150
+                    }],
+                    total: Some(1),
+                });
+            },
+            StdResult::Err(_e) => assert!(false)
+        }
+    }
+
+    #[test]
+    fn div() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let msg = HandleMsg::Div {
+            calculation: Calculation::BinaryCalculation {
+                left_operand: 23,
+                right_operand: 50
+            },
+        };
+
+        // it must be this key since that is who signed the query
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::DivAnswer { result } => assert_eq!(result, 0),
+            _ => assert!(false),
+        };
+
+        let msg = QueryMsg::WithPermit {
+            permit: serde_json::from_str(&PERMIT).unwrap(),
+            query: QueryWithPermit::CalculationHistory {
+                page: None,
+                page_size: 3,
+            }
+        };
+
+        let res = query(&mut deps, msg);
+        match res {
+            StdResult::Ok(raw_res) => {
+                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                println!("the result is: {:?}", deserialized_result);
+                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
+                    calcs: vec![StoredCalculation{
+                        left_operand: 23,
+                        right_operand: Some(50),
+                        operation: "Div".as_bytes().to_vec(),
+                        result: 0
+                    }],
+                    total: Some(1),
+                });
+            },
+            StdResult::Err(_e) => assert!(false)
+        }
+    }
+
+    #[test]
+    fn sqrt() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let msg = HandleMsg::Sqrt {
+            calculation: Calculation::UnaryCalculation {
+                operand: 17,
+            },
+        };
+
+        // it must be this key since that is who signed the query
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        let _res = handle(&mut deps, env, msg).unwrap();
+        match _res {
+            HandleAnswer::SqrtAnswer { result } => assert_eq!(result, 4),
+            _ => assert!(false),
+        };
+
+        let msg = QueryMsg::WithPermit {
+            permit: serde_json::from_str(&PERMIT).unwrap(),
+            query: QueryWithPermit::CalculationHistory {
+                page: None,
+                page_size: 3,
+            }
+        };
+
+        let res = query(&mut deps, msg);
+        match res {
+            StdResult::Ok(raw_res) => {
+                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                println!("the result is: {:?}", deserialized_result);
+                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
+                    calcs: vec![StoredCalculation{
+                        left_operand: 17,
+                        right_operand: None,
+                        operation: "Sqrt".as_bytes().to_vec(),
+                        result: 4
+                    }],
+                    total: Some(1),
+                });
+            },
+            StdResult::Err(_e) => assert!(false)
         }
     }
 }

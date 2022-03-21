@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use cosmwasm_std::{
     to_binary, Api, Binary, CanonicalAddr, Extern, HumanAddr, Querier, StdError, StdResult, Storage,
 };
