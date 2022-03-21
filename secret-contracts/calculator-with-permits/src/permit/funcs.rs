@@ -4,21 +4,21 @@ use cosmwasm_std::{
 use ripemd160::{Digest, Ripemd160};
 use secp256k1::Secp256k1;
 
-use crate::{Permit, RevokedPermits, SignedPermit};
+use crate::permit::{Permit, RevokedPermits, SignedPermit};
 
 pub fn validate<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     storage_prefix: &str,
     permit: &Permit,
-    current_token_address: HumanAddr,
+    current_contract_address: HumanAddr,
 ) -> StdResult<HumanAddr> {
-    if !permit.check_token(&current_token_address) {
+    if !permit.check_contract(&current_contract_address) {
         return Err(StdError::generic_err(format!(
-            "Permit doesn't apply to token {:?}, allowed tokens: {:?}",
-            current_token_address.as_str(),
+            "Permit doesn't apply to contract {:?}, allowed contract: {:?}",
+            current_contract_address.as_str(),
             permit
                 .params
-                .allowed_tokens
+                .allowed_contracts
                 .iter()
                 .map(|a| a.as_str())
                 .collect::<Vec<&str>>()
@@ -27,7 +27,10 @@ pub fn validate<S: Storage, A: Api, Q: Querier>(
 
     // Derive account from pubkey
     let pubkey = &permit.signature.pub_key.value;
-    let account = deps.api.human_address(&pubkey_to_account(pubkey))?;
+    let canonical = &pubkey_to_identifier_address(pubkey);
+    println!("the canonical address is: {:?}", canonical);
+    let account = deps.api.human_address(canonical)?;
+    println!("the human address is: {:?}", account);
 
     // Validate permit_name
     let permit_name = &permit.params.permit_name;
@@ -43,7 +46,7 @@ pub fn validate<S: Storage, A: Api, Q: Querier>(
 
     // Validate signature, reference: https://github.com/enigmampc/SecretNetwork/blob/f591ed0cb3af28608df3bf19d6cfb733cca48100/cosmwasm/packages/wasmi-runtime/src/crypto/secp256k1.rs#L49-L82
     let signed_bytes = to_binary(&SignedPermit::from_params(&permit.params))?;
-    let signed_bytes_hash = secret_toolkit_crypto::sha_256(signed_bytes.as_slice());
+    let signed_bytes_hash = secret_toolkit::crypto::sha_256(signed_bytes.as_slice());
     let secp256k1_msg = secp256k1::Message::from_slice(&signed_bytes_hash).map_err(|err| {
         StdError::generic_err(format!(
             "Failed to create a secp256k1 message from signed_bytes: {:?}",
@@ -70,8 +73,14 @@ pub fn validate<S: Storage, A: Api, Q: Querier>(
     Ok(account)
 }
 
-pub fn pubkey_to_account(pubkey: &Binary) -> CanonicalAddr {
+pub fn pubkey_to_identifier_address(pubkey: &Binary) -> CanonicalAddr {
     let mut hasher = Ripemd160::new();
-    hasher.update(secret_toolkit_crypto::sha_256(&pubkey.0));
-    CanonicalAddr(Binary(hasher.finalize().to_vec()))
+    hasher.update(secret_toolkit::crypto::sha_256(&pubkey.0));
+    // original implementation:
+    // CanonicalAddr(Binary(hasher.finalize().to_vec()))
+    // new implementation:
+    let hashbytes = hasher.finalize().to_vec();
+    let mut stringbytes = base64::encode(hashbytes).as_bytes().to_vec();
+    stringbytes.truncate(20);
+    CanonicalAddr(Binary(stringbytes))
 }

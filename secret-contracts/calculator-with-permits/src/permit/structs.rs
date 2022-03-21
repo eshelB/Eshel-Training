@@ -13,8 +13,8 @@ pub struct Permit {
 }
 
 impl Permit {
-    pub fn check_token(&self, token: &HumanAddr) -> bool {
-        self.params.allowed_tokens.contains(token)
+    pub fn check_contract(&self, contract: &HumanAddr) -> bool {
+        self.params.allowed_contracts.contains(contract)
     }
 
     pub fn check_permission(&self, permission: &Permission) -> bool {
@@ -25,7 +25,7 @@ impl Permit {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct PermitParams {
-    pub allowed_tokens: Vec<HumanAddr>,
+    pub allowed_contracts: Vec<HumanAddr>,
     pub permit_name: String,
     pub chain_id: String,
     pub permissions: Vec<Permission>,
@@ -150,7 +150,7 @@ impl PermitMsg {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct PermitContent {
-    pub allowed_tokens: Vec<HumanAddr>,
+    pub allowed_contracts: Vec<HumanAddr>,
     pub permissions: Vec<Permission>,
     pub permit_name: String,
 }
@@ -158,7 +158,7 @@ pub struct PermitContent {
 impl PermitContent {
     pub fn from_params(params: &PermitParams) -> Self {
         Self {
-            allowed_tokens: params.allowed_tokens.clone(),
+            allowed_contracts: params.allowed_contracts.clone(),
             permit_name: params.permit_name.clone(),
             permissions: params.permissions.clone(),
         }
@@ -169,17 +169,5 @@ impl PermitContent {
 #[serde(rename_all = "snake_case")]
 pub enum Permission {
     /// Allowance for SNIP-20 - Permission to query allowance of the owner & spender
-    Allowance,
-    /// Balance for SNIP-20 - Permission to query balance
-    Balance,
-    /// History for SNIP-20 - Permission to query transfer_history & transaction_hisotry
-    History,
-    /// Owner permission indicates that the bearer of this permit should be granted all
-    /// the access of the creator/signer of the permit.  SNIP-721 uses this to grant
-    /// viewing access to all data that the permit creator owns and is whitelisted for.
-    /// For SNIP-721 use, a permit with Owner permission should NEVER be given to
-    /// anyone else.  If someone wants to share private data, they should whitelist
-    /// the address they want to share with via a SetWhitelistedApproval tx, and that
-    /// address will view the data by creating their own permit with Owner permission
-    Owner,
+    CalculationHistory,
 }

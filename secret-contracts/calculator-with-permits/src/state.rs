@@ -11,7 +11,8 @@ use secret_toolkit::storage::{AppendStore, AppendStoreMut};
 
 pub static PREFIX_CALCULATION: &[u8] = b"calc";
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
 pub struct StoredCalculation {
     pub left_operand: i64,
     pub right_operand: Option<i64>,

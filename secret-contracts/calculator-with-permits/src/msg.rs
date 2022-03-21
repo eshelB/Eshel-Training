@@ -1,8 +1,8 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use crate::state::StoredCalculation;
-use secret_toolkit::permit::Permit;
 use cosmwasm_std::Binary;
+use crate::state::StoredCalculation;
+use crate::permit::Permit;
 
 pub type QueryResponse = Binary;
 
@@ -43,7 +43,7 @@ pub enum QueryWithPermit {
 #[serde(rename_all = "snake_case")]
 pub enum QueryAnswer {
     CalculationHistory {
-        txs: Vec<StoredCalculation>,
+        calcs: Vec<StoredCalculation>,
         total: Option<u64>,
     }
 }
