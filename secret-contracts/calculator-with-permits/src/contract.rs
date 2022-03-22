@@ -213,7 +213,6 @@ fn permit_queries<S: Storage, A: Api, Q: Querier>(
 
     match query {
         QueryWithPermit::CalculationHistory { page, page_size } => {
-            // todo add permission, or if it's not extensible, find a way to use my own permissions
             if !permit.check_permission(&Permission::CalculationHistory) {
                 return Err(StdError::generic_err(format!(
                     "No permission to query history, got permissions {:?}",
