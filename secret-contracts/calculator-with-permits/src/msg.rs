@@ -1,6 +1,6 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cosmwasm_std::Binary;
+use cosmwasm_std::{Binary, Uint128};
 use crate::state::StoredCalculation;
 use crate::permit::Permit;
 
@@ -34,8 +34,8 @@ pub enum QueryMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryWithPermit {
     CalculationHistory {
-        page: Option<u32>,
-        page_size: u32,
+        page: Option<Uint128>,
+        page_size: Uint128,
     },
 }
 
@@ -44,7 +44,7 @@ pub enum QueryWithPermit {
 pub enum QueryAnswer {
     CalculationHistory {
         calcs: Vec<StoredCalculation>,
-        total: Option<u64>,
+        total: Option<Uint128>,
     }
 }
 
@@ -52,11 +52,11 @@ pub enum QueryAnswer {
 #[serde(rename_all = "snake_case")]
 pub enum Calculation {
     BinaryCalculation {
-        left_operand: i64,
-        right_operand: i64,
+        left_operand: Uint128,
+        right_operand: Uint128,
     },
     UnaryCalculation {
-        operand: i64,
+        operand: Uint128,
         //todo maybe add padding
     },
 }
@@ -64,9 +64,9 @@ pub enum Calculation {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum HandleAnswer {
-    AddAnswer { result: i64 },
-    SubAnswer { result: i64 },
-    MulAnswer { result: i64 },
-    DivAnswer { result: i64 },
-    SqrtAnswer { result: u64 },
+    AddAnswer { result: Uint128 },
+    SubAnswer { result: Uint128 },
+    MulAnswer { result: Uint128 },
+    DivAnswer { result: Uint128 },
+    SqrtAnswer { result: Uint128 },
 }
