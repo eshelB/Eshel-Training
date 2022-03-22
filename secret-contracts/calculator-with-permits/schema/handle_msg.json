@@ -5,33 +5,148 @@
     {
       "type": "object",
       "required": [
-        "increment"
+        "add"
       ],
       "properties": {
-        "increment": {
-          "type": "object"
+        "add": {
+          "type": "object",
+          "required": [
+            "calculation"
+          ],
+          "properties": {
+            "calculation": {
+              "$ref": "#/definitions/Calculation"
+            }
+          }
         }
       }
     },
     {
       "type": "object",
       "required": [
-        "reset"
+        "sub"
       ],
       "properties": {
-        "reset": {
+        "sub": {
           "type": "object",
           "required": [
-            "count"
+            "calculation"
           ],
           "properties": {
-            "count": {
-              "type": "integer",
-              "format": "int32"
+            "calculation": {
+              "$ref": "#/definitions/Calculation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "mul"
+      ],
+      "properties": {
+        "mul": {
+          "type": "object",
+          "required": [
+            "calculation"
+          ],
+          "properties": {
+            "calculation": {
+              "$ref": "#/definitions/Calculation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "div"
+      ],
+      "properties": {
+        "div": {
+          "type": "object",
+          "required": [
+            "calculation"
+          ],
+          "properties": {
+            "calculation": {
+              "$ref": "#/definitions/Calculation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "sqrt"
+      ],
+      "properties": {
+        "sqrt": {
+          "type": "object",
+          "required": [
+            "calculation"
+          ],
+          "properties": {
+            "calculation": {
+              "$ref": "#/definitions/Calculation"
             }
           }
         }
       }
     }
-  ]
+  ],
+  "definitions": {
+    "Calculation": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "binary_calculation"
+          ],
+          "properties": {
+            "binary_calculation": {
+              "type": "object",
+              "required": [
+                "left_operand",
+                "right_operand"
+              ],
+              "properties": {
+                "left_operand": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "right_operand": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "unary_calculation"
+          ],
+          "properties": {
+            "unary_calculation": {
+              "type": "object",
+              "required": [
+                "operand"
+              ],
+              "properties": {
+                "operand": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
 }
