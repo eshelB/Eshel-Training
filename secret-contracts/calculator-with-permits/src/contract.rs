@@ -1,13 +1,14 @@
 use cosmwasm_std::{
-    Api, Env, Extern, Querier, StdError, StdResult, Storage,
-    HumanAddr, Binary, debug_print, to_binary, QueryResult
+    Api, Env, Extern, Querier, StdError, StdResult, Storage, HumanAddr, Binary, debug_print,
+    to_binary, QueryResult, HandleResult, InitResult, InitResponse, HandleResponse
 };
+
 use crate::permit::{
     validate, Permission, Permit, // RevokedPermits,
 };
 
 use crate::msg::{
-    Calculation, HandleMsg, InitMsg, InitAnswer, QueryMsg,
+    Calculation, HandleMsg, InitMsg, QueryMsg,
     HandleAnswer, QueryAnswer, QueryWithPermit
 };
 use crate::state::{StoredCalculation, append_calculation, get_calculations};
@@ -16,27 +17,33 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     _deps: &mut Extern<S, A, Q>,
     env: Env,
     _msg: InitMsg,
-) -> StdResult<InitAnswer> {
+) -> InitResult {
     debug_print!("Contract was initialized by {}", env.message.sender);
-    Ok(InitAnswer { })
+    Ok(InitResponse::default())
 }
 
 pub fn handle<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     msg: HandleMsg,
-) -> StdResult<HandleAnswer> {
+) -> HandleResult {
     // let sender: HumanAddr = env.message.sender;
     // debug_print!("handle was by triggered by {}", sender);
     debug_print!("handle was by triggered");
 
-    match msg {
+    let res = match msg {
         HandleMsg::Add { calculation } => try_add(deps, env, calculation),
         HandleMsg::Sub { calculation } => try_sub(deps, env, calculation),
         HandleMsg::Mul { calculation } => try_mul(deps, env, calculation),
         HandleMsg::Div { calculation } => try_div(deps, env, calculation),
         HandleMsg::Sqrt { calculation } => try_sqrt(deps, env, calculation),
-    }
+    };
+
+    Ok(HandleResponse {
+        messages: vec![],
+        log: vec![],
+        data: Some(to_binary(&res.unwrap())?),
+    })
 }
 
 fn save_calculation<S: Storage, A: Api, Q: Querier>(
@@ -239,7 +246,16 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
 mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
-    use cosmwasm_std::{coins};
+    use cosmwasm_std::{coins, from_binary};
+
+    fn unpack_handle<S: Storage, A: Api, Q: Querier>(
+        deps: &mut Extern<S, A, Q>,
+        env: Env,
+        msg: HandleMsg
+    ) -> HandleAnswer {
+        let res = handle(deps, env, msg).unwrap().data.unwrap();
+        from_binary(&res).unwrap()
+    }
 
     #[test]
     fn bad_permit() {
@@ -335,8 +351,8 @@ mod tests {
         };
         // it must be this key since that is who signed the previous query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
+        let res = unpack_handle(&mut deps, env, msg);
+        match res {
             HandleAnswer::AddAnswer { result } => assert_eq!(result, 42),
             _ => assert!(false),
         };
@@ -382,8 +398,8 @@ mod tests {
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
+        let res = unpack_handle(&mut deps, env, msg);
+        match res {
             HandleAnswer::SubAnswer { result } => assert_eq!(result, -177),
             _ => assert!(false),
         };
@@ -429,8 +445,8 @@ mod tests {
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
+        let res = unpack_handle(&mut deps, env, msg);
+        match res {
             HandleAnswer::MulAnswer { result } => assert_eq!(result, 1150),
             _ => assert!(false),
         };
@@ -476,8 +492,8 @@ mod tests {
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
+        let res = unpack_handle(&mut deps, env, msg);
+        match res {
             HandleAnswer::DivAnswer { result } => assert_eq!(result, 0),
             _ => assert!(false),
         };
@@ -522,8 +538,8 @@ mod tests {
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let _res = handle(&mut deps, env, msg).unwrap();
-        match _res {
+        let res = unpack_handle(&mut deps, env, msg);
+        match res {
             HandleAnswer::SqrtAnswer { result } => assert_eq!(result, 4),
             _ => assert!(false),
         };
