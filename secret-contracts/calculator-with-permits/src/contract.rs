@@ -233,7 +233,7 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
     page_size: u32,
 ) -> StdResult<Binary> {
     let address = deps.api.canonical_address(account)?;
-    let (calcs, total) = get_calculations(&deps.api, &deps.storage, &address, page, page_size)?;
+    let (calcs, total) = get_calculations(&deps.storage, &address, page, page_size)?;
 
     println!("the {:?} total calcs are: {:?}", total, calcs);
     to_binary(&QueryAnswer::CalculationHistory {

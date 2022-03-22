@@ -1,10 +1,7 @@
-#![allow(unused_imports, unused_variables)] //todo remove warning allowance
-
-use std::{any::type_name};
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 use schemars::JsonSchema;
-use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, StdError, CanonicalAddr, Api};
+use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, CanonicalAddr};
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use secret_toolkit::serialization::{Bincode2, Serde};
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
@@ -42,8 +39,7 @@ pub fn append_calculation<S: Storage>(
     store.push(calculation)
 }
 
-pub fn get_calculations<A: Api, S: ReadonlyStorage>(
-    api: &A,
+pub fn get_calculations<S: ReadonlyStorage>(
     storage: &S,
     for_address: &CanonicalAddr,
     page: u32,
