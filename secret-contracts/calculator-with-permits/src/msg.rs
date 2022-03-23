@@ -57,7 +57,6 @@ pub enum Calculation {
     },
     UnaryCalculation {
         operand: i64,
-        //todo maybe add padding
     },
 }
 
