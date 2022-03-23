@@ -1,6 +1,4 @@
-use cosmwasm_std::{
-    CanonicalAddr, HumanAddr, ReadonlyStorage, StdError, StdResult, Storage, Uint128,
-};
+use cosmwasm_std::{HumanAddr, ReadonlyStorage, StdError, StdResult, Storage, Uint128};
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use schemars::JsonSchema;
 use secret_toolkit::serialization::{Bincode2, Serde};
@@ -8,7 +6,7 @@ use secret_toolkit::storage::{AppendStore, AppendStoreMut};
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-pub static PREFIX_CALCULATION: &[u8] = b"calc";
+pub static PREFIX_CALCULATIONS: &[u8] = b"calcs";
 pub const KEY_CONSTANTS: &[u8] = b"constants";
 
 #[derive(Serialize, Debug, Deserialize, Clone, PartialEq, JsonSchema)]
@@ -58,22 +56,26 @@ pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(
 pub fn append_calculation<S: Storage>(
     store: &mut S,
     calculation: &StoredCalculation,
-    for_address: &CanonicalAddr,
+    for_address: &HumanAddr,
 ) -> StdResult<()> {
-    let mut store =
-        PrefixedStorage::multilevel(&[PREFIX_CALCULATION, for_address.as_slice()], store);
+    let mut store = PrefixedStorage::multilevel(
+        &[PREFIX_CALCULATIONS, &for_address.as_str().as_bytes()],
+        store,
+    );
     let mut store = AppendStoreMut::attach_or_create(&mut store)?;
     store.push(calculation)
 }
 
 pub fn get_calculations<S: ReadonlyStorage>(
     storage: &S,
-    for_address: &CanonicalAddr,
+    for_address: &HumanAddr,
     page: Uint128,
     page_size: Uint128,
 ) -> StdResult<(Vec<StoredCalculation>, Uint128)> {
-    let store =
-        ReadonlyPrefixedStorage::multilevel(&[PREFIX_CALCULATION, for_address.as_slice()], storage);
+    let store = ReadonlyPrefixedStorage::multilevel(
+        &[PREFIX_CALCULATIONS, &for_address.as_str().as_bytes()],
+        storage,
+    );
 
     // Try to access the storage of calculations for the account.
     // If it doesn't exist yet, return an empty list of calculations.

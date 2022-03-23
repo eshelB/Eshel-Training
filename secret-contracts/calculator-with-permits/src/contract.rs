@@ -37,10 +37,6 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     env: Env,
     msg: HandleMsg,
 ) -> HandleResult {
-    // let sender: HumanAddr = env.message.sender;
-    // debug_print!("handle was by triggered by {}", sender);
-    debug_print!("handle was by triggered");
-
     let res = match msg {
         HandleMsg::Add(calculation) => try_add(deps, env, calculation)?,
         HandleMsg::Sub(calculation) => try_sub(deps, env, calculation)?,
@@ -61,8 +57,7 @@ fn save_calculation<S: Storage, A: Api, Q: Querier>(
     calculation: StoredCalculation,
     env: Env,
 ) -> StdResult<()> {
-    let sender = deps.api.canonical_address(&env.message.sender)?;
-    append_calculation(&mut deps.storage, &calculation, &sender)
+    append_calculation(&mut deps.storage, &calculation, &env.message.sender)
 }
 
 fn try_sub<S: Storage, A: Api, Q: Querier>(
@@ -215,8 +210,7 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
     page: Uint128,
     page_size: Uint128,
 ) -> StdResult<Binary> {
-    let address = deps.api.canonical_address(account)?;
-    let (calcs, total) = get_calculations(&deps.storage, &address, page, page_size)?;
+    let (calcs, total) = get_calculations(&deps.storage, &account, page, page_size)?;
 
     println!("the {:?} total calcs are: {:?}", total, calcs);
     to_binary(&QueryAnswer::CalculationHistory {
