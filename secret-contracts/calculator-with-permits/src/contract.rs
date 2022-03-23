@@ -334,11 +334,10 @@ mod tests {
     }"#;
 
     #[test]
-    #[allow(unused_must_use)]
     fn add() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {});
+        init(&mut deps, env, InitMsg {}).unwrap();
 
         // initial calculation history for an account should be unexistent
         let msg = QueryMsg::WithPermit {
@@ -420,6 +419,8 @@ mod tests {
     #[test]
     fn sub_underflow() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {}).unwrap();
 
         let msg = HandleMsg::Sub {
             calculation: Calculation::BinaryCalculation {
