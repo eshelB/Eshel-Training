@@ -5,11 +5,11 @@ use serde::{Deserialize, Serialize};
 use crate::permit::Permit;
 use crate::state::StoredCalculation;
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // nothing to initialize in this contract
 pub struct InitMsg {}
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum HandleMsg {
     Add { calculation: Calculation },
@@ -19,7 +19,7 @@ pub enum HandleMsg {
     Sqrt { calculation: Calculation },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     WithPermit {
@@ -28,7 +28,7 @@ pub enum QueryMsg {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryWithPermit {
     CalculationHistory {
@@ -37,7 +37,8 @@ pub enum QueryWithPermit {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cfg_attr(test, derive(Deserialize))]
 #[serde(rename_all = "snake_case")]
 pub enum QueryAnswer {
     CalculationHistory {
@@ -58,7 +59,8 @@ pub enum Calculation {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cfg_attr(test, derive(Deserialize))]
 #[serde(rename_all = "snake_case")]
 pub enum HandleAnswer {
     AddAnswer { result: Uint128 },
