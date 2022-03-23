@@ -12,12 +12,20 @@ pub struct InitMsg {}
 #[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum HandleMsg {
-    Add { calculation: Calculation },
-    Sub { calculation: Calculation },
-    Mul { calculation: Calculation },
-    Div { calculation: Calculation },
-    Sqrt { calculation: Calculation },
+    Add(BinaryOp),
+    Sub(BinaryOp),
+    Mul(BinaryOp),
+    Div(BinaryOp),
+    Sqrt(UnaryOp),
 }
+
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct UnaryOp(pub Uint128);
+
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct BinaryOp(pub Uint128, pub Uint128);
 
 #[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -47,25 +55,7 @@ pub enum QueryAnswer {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum Calculation {
-    BinaryCalculation {
-        left_operand: Uint128,
-        right_operand: Uint128,
-    },
-    UnaryCalculation {
-        operand: Uint128,
-    },
-}
-
 #[derive(Serialize, Clone, Debug, PartialEq, JsonSchema)]
 #[cfg_attr(test, derive(Deserialize))]
 #[serde(rename_all = "snake_case")]
-pub enum HandleAnswer {
-    AddAnswer { result: Uint128 },
-    SubAnswer { result: Uint128 },
-    MulAnswer { result: Uint128 },
-    DivAnswer { result: Uint128 },
-    SqrtAnswer { result: Uint128 },
-}
+pub struct HandleAnswer(pub Uint128);

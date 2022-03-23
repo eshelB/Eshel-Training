@@ -5,7 +5,7 @@ use cosmwasm_std::{
 use num_integer::Roots;
 
 use crate::msg::{
-    Calculation, HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg, QueryWithPermit,
+    BinaryOp, HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg, QueryWithPermit, UnaryOp,
 };
 use crate::permit::{
     validate, // RevokedPermits,
@@ -42,11 +42,11 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     debug_print!("handle was by triggered");
 
     let res = match msg {
-        HandleMsg::Add { calculation } => try_add(deps, env, calculation)?,
-        HandleMsg::Sub { calculation } => try_sub(deps, env, calculation)?,
-        HandleMsg::Mul { calculation } => try_mul(deps, env, calculation)?,
-        HandleMsg::Div { calculation } => try_div(deps, env, calculation)?,
-        HandleMsg::Sqrt { calculation } => try_sqrt(deps, env, calculation)?,
+        HandleMsg::Add(calculation) => try_add(deps, env, calculation)?,
+        HandleMsg::Sub(calculation) => try_sub(deps, env, calculation)?,
+        HandleMsg::Mul(calculation) => try_mul(deps, env, calculation)?,
+        HandleMsg::Div(calculation) => try_div(deps, env, calculation)?,
+        HandleMsg::Sqrt(calculation) => try_sqrt(deps, env, calculation)?,
     };
 
     Ok(HandleResponse {
@@ -68,9 +68,9 @@ fn save_calculation<S: Storage, A: Api, Q: Querier>(
 fn try_sub<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    calculation: Calculation,
+    calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
-    let (left_operand, right_operand) = get_operands(calculation).unwrap();
+    let (left_operand, right_operand) = (calculation.0, calculation.1);
     let result = (left_operand - right_operand)?;
 
     let calculation = StoredCalculation {
@@ -83,15 +83,15 @@ fn try_sub<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Sub: saved history successfully");
-    Ok(HandleAnswer::SubAnswer { result })
+    Ok(HandleAnswer(result))
 }
 
 fn try_mul<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    calculation: Calculation,
+    calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
-    let (left_operand, right_operand) = get_operands(calculation).unwrap();
+    let (left_operand, right_operand) = (calculation.0, calculation.1);
     let result = Uint128::from(left_operand.u128() * right_operand.u128());
 
     let calculation = StoredCalculation {
@@ -104,15 +104,15 @@ fn try_mul<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Mul: saved history successfully");
-    Ok(HandleAnswer::MulAnswer { result })
+    Ok(HandleAnswer(result))
 }
 
 fn try_div<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    calculation: Calculation,
+    calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
-    let (left_operand, right_operand) = get_operands(calculation).unwrap();
+    let (left_operand, right_operand) = (calculation.0, calculation.1);
     let result = left_operand.multiply_ratio(1_u128, right_operand);
 
     let calculation = StoredCalculation {
@@ -125,35 +125,19 @@ fn try_div<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Div: saved history successfully");
-    Ok(HandleAnswer::DivAnswer { result })
+    Ok(HandleAnswer(result))
 }
 
 fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    calculation: Calculation,
+    calculation: UnaryOp,
 ) -> StdResult<HandleAnswer> {
-    let radicand = match calculation {
-        Calculation::BinaryCalculation { .. } => {
-            return Err(StdError::GenericErr {
-                msg: "This method should be called with one operand".to_string(),
-                backtrace: None,
-            })
-        }
-        Calculation::UnaryCalculation { operand } => operand,
-    };
-
-    // Maybe a better approach would have been to define the input as unsigned, but then
-    // the UnaryCalculation either is not used, or becomes less generic
-    if radicand < Uint128::zero() {
-        return Err(StdError::GenericErr {
-            msg: "Radicand can't be negative on Sqrt operation".to_string(),
-            backtrace: None,
-        });
-    }
+    let radicand = calculation.0;
 
     // square root rounds to the nearest integer to avoid floating point discrepancies
     let result = Uint128::from(radicand.u128().sqrt());
+    // let result = radicand.sqrt();
 
     let calculation = StoredCalculation {
         left_operand: radicand,
@@ -165,28 +149,15 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Sqrt: saved history successfully");
-    Ok(HandleAnswer::SqrtAnswer { result })
-}
-
-fn get_operands(binary_calculation: Calculation) -> StdResult<(Uint128, Uint128)> {
-    match binary_calculation {
-        Calculation::BinaryCalculation {
-            left_operand,
-            right_operand,
-        } => Ok((left_operand, right_operand)),
-        Calculation::UnaryCalculation { operand: _ } => Err(StdError::GenericErr {
-            msg: "This method should be called with two operands".to_string(),
-            backtrace: None,
-        }),
-    }
+    Ok(HandleAnswer(result))
 }
 
 fn try_add<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
-    calculation: Calculation,
+    calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
-    let (left_operand, right_operand) = get_operands(calculation).unwrap();
+    let (left_operand, right_operand) = (calculation.0, calculation.1);
     let result = left_operand + right_operand;
 
     let debug_message = format!(
@@ -206,7 +177,7 @@ fn try_add<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Add: saved history successfully");
-    Ok(HandleAnswer::AddAnswer { result })
+    Ok(HandleAnswer(result))
 }
 
 pub fn query<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>, msg: QueryMsg) -> QueryResult {
@@ -369,20 +340,12 @@ mod tests {
             }
         }
 
-        let msg = HandleMsg::Add {
-            calculation: Calculation::BinaryCalculation {
-                left_operand: Uint128(12),
-                right_operand: Uint128(30),
-            },
-        };
+        let msg = HandleMsg::Add(BinaryOp(Uint128(12), Uint128(30)));
 
         // it must be this key since that is who signed the previous query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let res = unpack_handle(&mut deps, env, msg);
-        match res {
-            HandleAnswer::AddAnswer { result } => assert_eq!(result, Uint128(42)),
-            _ => assert!(false),
-        };
+        let HandleAnswer(result) = unpack_handle(&mut deps, env, msg);
+        assert_eq!(result, Uint128(42));
 
         let msg = QueryMsg::WithPermit {
             permit: serde_json::from_str(&PERMIT).unwrap(),
@@ -422,12 +385,7 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
-        let msg = HandleMsg::Sub {
-            calculation: Calculation::BinaryCalculation {
-                left_operand: Uint128(23),
-                right_operand: Uint128(113),
-            },
-        };
+        let msg = HandleMsg::Sub(BinaryOp(Uint128(23), Uint128(113)));
 
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = handle(&mut deps, env, msg);
@@ -455,20 +413,12 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
-        let msg = HandleMsg::Sub {
-            calculation: Calculation::BinaryCalculation {
-                left_operand: Uint128(123),
-                right_operand: Uint128(13),
-            },
-        };
+        let msg = HandleMsg::Sub(BinaryOp(Uint128(123), Uint128(13)));
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let res = unpack_handle(&mut deps, env, msg);
-        match res {
-            HandleAnswer::SubAnswer { result } => assert_eq!(result, Uint128(110)),
-            _ => assert!(false),
-        };
+        let HandleAnswer(result) = unpack_handle(&mut deps, env, msg);
+        assert_eq!(result, Uint128(110));
 
         let msg = QueryMsg::WithPermit {
             permit: serde_json::from_str(&PERMIT).unwrap(),
@@ -508,20 +458,12 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
-        let msg = HandleMsg::Mul {
-            calculation: Calculation::BinaryCalculation {
-                left_operand: Uint128(23),
-                right_operand: Uint128(50),
-            },
-        };
+        let msg = HandleMsg::Mul(BinaryOp(Uint128(23), Uint128(50)));
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let res = unpack_handle(&mut deps, env, msg);
-        match res {
-            HandleAnswer::MulAnswer { result } => assert_eq!(result, Uint128(1150)),
-            _ => assert!(false),
-        };
+        let HandleAnswer(result) = unpack_handle(&mut deps, env, msg);
+        assert_eq!(result, Uint128(1150));
 
         let msg = QueryMsg::WithPermit {
             permit: serde_json::from_str(&PERMIT).unwrap(),
@@ -564,20 +506,12 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
-        let msg = HandleMsg::Div {
-            calculation: Calculation::BinaryCalculation {
-                left_operand: Uint128(23),
-                right_operand: Uint128(50),
-            },
-        };
+        let msg = HandleMsg::Div(BinaryOp(Uint128(23), Uint128(50)));
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let res = unpack_handle(&mut deps, env, msg);
-        match res {
-            HandleAnswer::DivAnswer { result } => assert_eq!(result, Uint128(0)),
-            _ => assert!(false),
-        };
+        let HandleAnswer(result) = unpack_handle(&mut deps, env, msg);
+        assert_eq!(result, Uint128(0));
 
         let msg = QueryMsg::WithPermit {
             permit: serde_json::from_str(&PERMIT).unwrap(),
@@ -617,25 +551,18 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
-        let msg = HandleMsg::Sqrt {
-            calculation: Calculation::UnaryCalculation {
-                operand: Uint128(17),
-            },
-        };
+        let msg = HandleMsg::Sqrt(UnaryOp(Uint128(17)));
 
         // it must be this key since that is who signed the query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        let res = unpack_handle(&mut deps, env, msg);
-        match res {
-            HandleAnswer::SqrtAnswer { result } => assert_eq!(result, Uint128(4)),
-            _ => assert!(false),
-        };
+        let HandleAnswer(result) = unpack_handle(&mut deps, env, msg);
+        assert_eq!(result, Uint128(4));
 
         let msg = QueryMsg::WithPermit {
             permit: serde_json::from_str(&PERMIT).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: Uint128(3),
+                page_size: Uint128(4),
             },
         };
 
