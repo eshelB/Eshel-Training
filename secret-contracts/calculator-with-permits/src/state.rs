@@ -3,7 +3,6 @@ use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use schemars::JsonSchema;
 use secret_toolkit::serialization::{Bincode2, Serde};
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
-use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 pub static PREFIX_CALCULATIONS: &[u8] = b"calcs";
@@ -36,21 +35,6 @@ pub struct StoredCalculation {
     pub right_operand: Option<Uint128>,
     pub operation: String,
     pub result: Uint128,
-}
-
-pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {
-    storage.set(key, &Bincode2::serialize(value)?);
-    Ok(())
-}
-
-pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(
-    storage: &S,
-    key: &[u8],
-) -> StdResult<Option<T>> {
-    match storage.get(key) {
-        Some(value) => Bincode2::deserialize(&value).map(Some),
-        None => Ok(None),
-    }
 }
 
 pub fn append_calculation<S: Storage>(
