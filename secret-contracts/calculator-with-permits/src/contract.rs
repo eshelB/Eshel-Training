@@ -240,7 +240,6 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
-    use cosmwasm_std::StdError::GenericErr;
     use cosmwasm_std::{coins, from_binary};
 
     use super::*;
@@ -290,12 +289,12 @@ mod tests {
             StdResult::Ok(_res) => assert!(false),
             StdResult::Err(e) => {
                 // println!("{:?}", e);
-                let expected_error = cosmwasm_std::StdError::GenericErr {
-                    msg: "Failed to verify signatures for the given permit: IncorrectSignature"
-                        .to_string(),
-                    backtrace: None,
-                };
-                assert_eq!(e, expected_error);
+                assert_eq!(
+                    e,
+                    StdError::generic_err(
+                        "Failed to verify signatures for the given permit: IncorrectSignature",
+                    )
+                );
             }
         }
     }
@@ -404,18 +403,10 @@ mod tests {
         match res {
             Err(e) => {
                 println!("{:?}", e);
-                assert_eq!(
-                    e,
-                    GenericErr {
-                        msg: "Underflow in Sub operation".to_string(),
-                        backtrace: None
-                    }
-                )
+                assert_eq!(e, StdError::generic_err("Underflow in Sub operation"))
             }
             _ => assert!(false),
         };
-
-        // from_binary(&res).unwrap()
     }
 
     #[test]
