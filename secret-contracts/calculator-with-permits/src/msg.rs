@@ -1,11 +1,9 @@
-use cosmwasm_std::{Binary, Uint128};
+use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::permit::Permit;
 use crate::state::StoredCalculation;
-
-pub type QueryResponse = Binary;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // nothing to initialize in this contract
