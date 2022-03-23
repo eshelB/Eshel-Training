@@ -38,11 +38,11 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     msg: HandleMsg,
 ) -> HandleResult {
     let res = match msg {
-        HandleMsg::Add(calculation) => try_add(deps, env, calculation)?,
-        HandleMsg::Sub(calculation) => try_sub(deps, env, calculation)?,
-        HandleMsg::Mul(calculation) => try_mul(deps, env, calculation)?,
-        HandleMsg::Div(calculation) => try_div(deps, env, calculation)?,
-        HandleMsg::Sqrt(calculation) => try_sqrt(deps, env, calculation)?,
+        HandleMsg::Add(calculation) => add(deps, env, calculation)?,
+        HandleMsg::Sub(calculation) => sub(deps, env, calculation)?,
+        HandleMsg::Mul(calculation) => mul(deps, env, calculation)?,
+        HandleMsg::Div(calculation) => div(deps, env, calculation)?,
+        HandleMsg::Sqrt(calculation) => sqrt(deps, env, calculation)?,
     };
 
     Ok(HandleResponse {
@@ -60,7 +60,7 @@ fn save_calculation<S: Storage, A: Api, Q: Querier>(
     append_calculation(&mut deps.storage, &calculation, &env.message.sender)
 }
 
-fn try_add<S: Storage, A: Api, Q: Querier>(
+fn add<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     calculation: BinaryOp,
@@ -88,7 +88,7 @@ fn try_add<S: Storage, A: Api, Q: Querier>(
     Ok(HandleAnswer(result))
 }
 
-fn try_sub<S: Storage, A: Api, Q: Querier>(
+fn sub<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     calculation: BinaryOp,
@@ -109,7 +109,7 @@ fn try_sub<S: Storage, A: Api, Q: Querier>(
     Ok(HandleAnswer(result))
 }
 
-fn try_mul<S: Storage, A: Api, Q: Querier>(
+fn mul<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     calculation: BinaryOp,
@@ -130,7 +130,7 @@ fn try_mul<S: Storage, A: Api, Q: Querier>(
     Ok(HandleAnswer(result))
 }
 
-fn try_div<S: Storage, A: Api, Q: Querier>(
+fn div<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     calculation: BinaryOp,
@@ -151,7 +151,7 @@ fn try_div<S: Storage, A: Api, Q: Querier>(
     Ok(HandleAnswer(result))
 }
 
-fn try_sqrt<S: Storage, A: Api, Q: Querier>(
+fn sqrt<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
     calculation: UnaryOp,
