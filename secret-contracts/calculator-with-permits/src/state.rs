@@ -95,9 +95,5 @@ pub fn get_calculations<S: ReadonlyStorage>(
 
     let calculations: StdResult<Vec<StoredCalculation>> = calculations_iter.collect();
 
-    // The `and_then` here flattens the `StdResult<StdResult<StoredCalculation>>` to an `StdResult<StoredCalculation>`
-    // let calculations: StdResult<Vec<StoredCalculation>> = calculations_iter
-    //     .map(|calc| calc.map(|calc| calc.into_humanized(api)).and_then(|x| x))
-    //     .collect();
     calculations.map(|txs| (txs, Uint128::from(store.len() as u128)))
 }
