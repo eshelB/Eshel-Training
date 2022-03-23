@@ -22,7 +22,6 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     env: Env,
     _msg: InitMsg,
 ) -> InitResult {
-    debug_print!("Contract was initialized by {}", env.message.sender);
     set_constants(
         &mut deps.storage,
         &Constants {
@@ -72,13 +71,6 @@ fn add<S: Storage, A: Api, Q: Querier>(
             .checked_add(right_operand.u128())
             .ok_or_else(|| StdError::generic_err(format!("Overflow in Add operation")))?,
     );
-
-    let debug_message = format!(
-        "performed {} + {} = {}",
-        left_operand, right_operand, result
-    );
-    println!("macro print: {}", debug_message);
-    debug_print(debug_message);
 
     let calculation = StoredCalculation {
         left_operand,
@@ -230,7 +222,6 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<Binary> {
     let (calcs, total) = get_calculations(&deps.storage, &account, page, page_size)?;
 
-    println!("the {:?} total calcs are: {:?}", total, calcs);
     to_binary(&QueryAnswer::CalculationHistory {
         calcs,
         total: Some(total),
@@ -288,7 +279,6 @@ mod tests {
         match res {
             StdResult::Ok(_res) => assert!(false),
             StdResult::Err(e) => {
-                // println!("{:?}", e);
                 assert_eq!(
                     e,
                     StdError::generic_err(
