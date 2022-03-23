@@ -1,7 +1,8 @@
 use cosmwasm_std::{
     Api, Env, Extern, Querier, StdError, StdResult, Storage, HumanAddr, Binary, debug_print,
-    to_binary, QueryResult, HandleResult, InitResult, InitResponse, HandleResponse
+    to_binary, QueryResult, HandleResult, InitResult, InitResponse, HandleResponse, Uint128
 };
+use num_integer::Roots;
 
 use crate::permit::{
     validate, Permission, Permit, // RevokedPermits,
@@ -35,17 +36,17 @@ pub fn handle<S: Storage, A: Api, Q: Querier>(
     debug_print!("handle was by triggered");
 
     let res = match msg {
-        HandleMsg::Add { calculation } => try_add(deps, env, calculation),
-        HandleMsg::Sub { calculation } => try_sub(deps, env, calculation),
-        HandleMsg::Mul { calculation } => try_mul(deps, env, calculation),
-        HandleMsg::Div { calculation } => try_div(deps, env, calculation),
-        HandleMsg::Sqrt { calculation } => try_sqrt(deps, env, calculation),
+        HandleMsg::Add { calculation } => try_add(deps, env, calculation)?,
+        HandleMsg::Sub { calculation } => try_sub(deps, env, calculation)?,
+        HandleMsg::Mul { calculation } => try_mul(deps, env, calculation)?,
+        HandleMsg::Div { calculation } => try_div(deps, env, calculation)?,
+        HandleMsg::Sqrt { calculation } => try_sqrt(deps, env, calculation)?,
     };
 
     Ok(HandleResponse {
         messages: vec![],
         log: vec![],
-        data: Some(to_binary(&res.unwrap())?),
+        data: Some(to_binary(&res)?),
     })
 }
 
@@ -64,7 +65,7 @@ fn try_sub<S: Storage, A: Api, Q: Querier>(
     calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
-    let result = left_operand - right_operand;
+    let result = (left_operand - right_operand)?;
 
     let calculation = StoredCalculation {
         left_operand: left_operand,
@@ -85,13 +86,13 @@ fn try_mul<S: Storage, A: Api, Q: Querier>(
     calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
-    let result = left_operand * right_operand;
+    let result = Uint128::from(left_operand.u128() * right_operand.u128());
 
     let calculation = StoredCalculation {
         left_operand: left_operand,
         right_operand: Some(right_operand),
         operation: "Mul".as_bytes().to_vec(),
-        result: result,
+        result,
     };
 
     save_calculation(deps, calculation, env)?;
@@ -106,7 +107,7 @@ fn try_div<S: Storage, A: Api, Q: Querier>(
     calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
-    let result = left_operand / right_operand;
+    let result = left_operand.multiply_ratio(1_u128,right_operand);
 
     let calculation = StoredCalculation {
         left_operand: left_operand,
@@ -136,7 +137,7 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
 
     // Maybe a better approach would have been to define the input as unsigned, but then
     // the UnaryCalculation either is not used, or becomes less generic
-    if radicand < 0 {
+    if radicand < Uint128::zero() {
         return Err(StdError::GenericErr {
             msg: "Radicand can't be negative on Sqrt operation".to_string(),
             backtrace: None,
@@ -144,14 +145,13 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     }
 
     // square root rounds to the nearest integer to avoid floating point discrepancies
-    // todo: maybe use cosmwasm_std::Decimal.sqrt() instead
-    let result = (radicand as f64).sqrt() as u64;
+    let result = Uint128::from(radicand.u128().sqrt());
 
     let calculation = StoredCalculation {
         left_operand: radicand,
         right_operand: None,
         operation: "Sqrt".as_bytes().to_vec(),
-        result: result as i64,
+        result,
     };
 
     save_calculation(deps, calculation, env)?;
@@ -160,7 +160,7 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     Ok(HandleAnswer::SqrtAnswer { result })
 }
 
-fn get_operands(binary_calculation: Calculation) -> StdResult<(i64, i64)> {
+fn get_operands(binary_calculation: Calculation) -> StdResult<(Uint128, Uint128)> {
     match binary_calculation {
         Calculation::BinaryCalculation { left_operand, right_operand } => {
             Ok((left_operand, right_operand))
@@ -224,7 +224,7 @@ fn permit_queries<S: Storage, A: Api, Q: Querier>(
                 )));
             }
 
-            query_calculation_history(deps, &account, page.unwrap_or(0), page_size)
+            query_calculation_history(deps, &account, page.unwrap_or(Uint128::zero()), page_size)
         }
     }
 }
@@ -232,8 +232,8 @@ fn permit_queries<S: Storage, A: Api, Q: Querier>(
 pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
     account: &HumanAddr,
-    page: u32,
-    page_size: u32,
+    page: Uint128,
+    page_size: Uint128,
 ) -> StdResult<Binary> {
     let address = deps.api.canonical_address(account)?;
     let (calcs, total) = get_calculations(&deps.storage, &address, page, page_size)?;
@@ -250,6 +250,7 @@ mod tests {
     use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
     use cosmwasm_std::{coins, from_binary};
+    use cosmwasm_std::StdError::Underflow;
 
     fn unpack_handle<S: Storage, A: Api, Q: Querier>(
         deps: &mut Extern<S, A, Q>,
@@ -287,7 +288,7 @@ mod tests {
             permit: serde_json::from_str(&bad_permit).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: 3,
+                page_size: Uint128(3),
             }
         };
 
@@ -333,7 +334,7 @@ mod tests {
             permit: serde_json::from_str(&PERMIT).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: 3,
+                page_size: Uint128(3),
             }
         };
 
@@ -345,25 +346,27 @@ mod tests {
                 println!("the result is: {:?}", deserialized_result);
                 assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
                     calcs: vec![],
-                    total: Some(0),
+                    total: Some(Uint128::zero()),
                 });
             },
-            StdResult::Err(_e) => assert!(false)
+            StdResult::Err(e) => {
+                println!("{:?}", e);
+                assert!(false)
+            }
         }
 
         let msg = HandleMsg::Add {
              calculation: Calculation::BinaryCalculation {
-                 left_operand: 12,
-                 right_operand: 30
+                 left_operand: Uint128(12),
+                 right_operand: Uint128(30)
              },
         };
-
 
         // it must be this key since that is who signed the previous query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = unpack_handle(&mut deps, env, msg);
         match res {
-            HandleAnswer::AddAnswer { result } => assert_eq!(result, 42),
+            HandleAnswer::AddAnswer { result } => assert_eq!(result, Uint128(42)),
             _ => assert!(false),
         };
 
@@ -371,7 +374,7 @@ mod tests {
             permit: serde_json::from_str(&PERMIT).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: 3,
+                page_size: Uint128(3),
             }
         };
 
@@ -383,16 +386,44 @@ mod tests {
                 println!("the result is: {:?}", deserialized_result);
                 assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
                     calcs: vec![StoredCalculation{
-                        left_operand: 12,
-                        right_operand: Some(30),
+                        left_operand: Uint128(12),
+                        right_operand: Some(Uint128(30)),
                         operation: "Add".as_bytes().to_vec(),
-                        result: 42
+                        result: Uint128(42)
                     }],
-                    total: Some(1),
+                    total: Some(Uint128(1)),
                 });
             },
             StdResult::Err(_e) => assert!(false)
         }
+    }
+
+    #[test]
+    fn sub_underflow() {
+        let mut deps = mock_dependencies(20, &coins(2, "token"));
+
+        let msg = HandleMsg::Sub {
+            calculation: Calculation::BinaryCalculation {
+                left_operand: Uint128(23),
+                right_operand: Uint128(113)
+            },
+        };
+
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        let res = handle(&mut deps, env, msg);
+        match res {
+            Err(e) => {
+                println!("{:?}", e);
+                assert_eq!(e, Underflow {
+                    minuend: "23".to_string(),
+                    subtrahend: "113".to_string(),
+                    backtrace: None
+                })
+            },
+            _ => assert!(false),
+        };
+
+        // from_binary(&res).unwrap()
     }
 
     #[test]
@@ -403,8 +434,8 @@ mod tests {
 
         let msg = HandleMsg::Sub {
             calculation: Calculation::BinaryCalculation {
-                left_operand: 123,
-                right_operand: 300
+                left_operand: Uint128(123),
+                right_operand: Uint128(13)
             },
         };
 
@@ -412,7 +443,7 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = unpack_handle(&mut deps, env, msg);
         match res {
-            HandleAnswer::SubAnswer { result } => assert_eq!(result, -177),
+            HandleAnswer::SubAnswer { result } => assert_eq!(result, Uint128(110)),
             _ => assert!(false),
         };
 
@@ -420,7 +451,7 @@ mod tests {
             permit: serde_json::from_str(&PERMIT).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: 3,
+                page_size: Uint128(3),
             }
         };
 
@@ -432,12 +463,12 @@ mod tests {
                 println!("the result is: {:?}", deserialized_result);
                 assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
                     calcs: vec![StoredCalculation{
-                        left_operand: 123,
-                        right_operand: Some(300),
+                        left_operand: Uint128(123),
+                        right_operand: Some(Uint128(13)),
                         operation: "Sub".as_bytes().to_vec(),
-                        result: -177
+                        result: Uint128(110)
                     }],
-                    total: Some(1),
+                    total: Some(Uint128(1)),
                 });
             },
             StdResult::Err(_e) => assert!(false)
@@ -452,8 +483,8 @@ mod tests {
 
         let msg = HandleMsg::Mul {
             calculation: Calculation::BinaryCalculation {
-                left_operand: 23,
-                right_operand: 50
+                left_operand: Uint128(23),
+                right_operand: Uint128(50)
             },
         };
 
@@ -461,7 +492,7 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = unpack_handle(&mut deps, env, msg);
         match res {
-            HandleAnswer::MulAnswer { result } => assert_eq!(result, 1150),
+            HandleAnswer::MulAnswer { result } => assert_eq!(result, Uint128(1150)),
             _ => assert!(false),
         };
 
@@ -469,7 +500,7 @@ mod tests {
             permit: serde_json::from_str(&PERMIT).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: 3,
+                page_size: Uint128(3),
             }
         };
 
@@ -481,12 +512,12 @@ mod tests {
                 println!("the result is: {:?}", deserialized_result);
                 assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
                     calcs: vec![StoredCalculation{
-                        left_operand: 23,
-                        right_operand: Some(50),
+                        left_operand: Uint128(23),
+                        right_operand: Some(Uint128(50)),
                         operation: "Mul".as_bytes().to_vec(),
-                        result: 1150
+                        result: Uint128(1150)
                     }],
-                    total: Some(1),
+                    total: Some(Uint128(1)),
                 });
             },
             StdResult::Err(e) => {
@@ -504,8 +535,8 @@ mod tests {
 
         let msg = HandleMsg::Div {
             calculation: Calculation::BinaryCalculation {
-                left_operand: 23,
-                right_operand: 50
+                left_operand: Uint128(23),
+                right_operand: Uint128(50)
             },
         };
 
@@ -513,17 +544,15 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = unpack_handle(&mut deps, env, msg);
         match res {
-            HandleAnswer::DivAnswer { result } => assert_eq!(result, 0),
-            _ => {
-                assert!(false)
-            },
+            HandleAnswer::DivAnswer { result } => assert_eq!(result, Uint128(0)),
+            _ => assert!(false),
         };
 
         let msg = QueryMsg::WithPermit {
             permit: serde_json::from_str(&PERMIT).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: 3,
+                page_size: Uint128(3),
             }
         };
 
@@ -535,12 +564,12 @@ mod tests {
                 println!("the result is: {:?}", deserialized_result);
                 assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
                     calcs: vec![StoredCalculation{
-                        left_operand: 23,
-                        right_operand: Some(50),
+                        left_operand: Uint128(23),
+                        right_operand: Some(Uint128(50)),
                         operation: "Div".as_bytes().to_vec(),
-                        result: 0
+                        result: Uint128(0)
                     }],
-                    total: Some(1),
+                    total: Some(Uint128(1)),
                 });
             },
             StdResult::Err(_e) => assert!(false)
@@ -555,7 +584,7 @@ mod tests {
 
         let msg = HandleMsg::Sqrt {
             calculation: Calculation::UnaryCalculation {
-                operand: 17,
+                operand: Uint128(17),
             },
         };
 
@@ -563,7 +592,7 @@ mod tests {
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = unpack_handle(&mut deps, env, msg);
         match res {
-            HandleAnswer::SqrtAnswer { result } => assert_eq!(result, 4),
+            HandleAnswer::SqrtAnswer { result } => assert_eq!(result, Uint128(4)),
             _ => assert!(false),
         };
 
@@ -571,7 +600,7 @@ mod tests {
             permit: serde_json::from_str(&PERMIT).unwrap(),
             query: QueryWithPermit::CalculationHistory {
                 page: None,
-                page_size: 3,
+                page_size: Uint128(3),
             }
         };
 
@@ -583,12 +612,12 @@ mod tests {
                 println!("the result is: {:?}", deserialized_result);
                 assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
                     calcs: vec![StoredCalculation{
-                        left_operand: 17,
+                        left_operand: Uint128(17),
                         right_operand: None,
                         operation: "Sqrt".as_bytes().to_vec(),
-                        result: 4
+                        result: Uint128(4)
                     }],
-                    total: Some(1),
+                    total: Some(Uint128(1)),
                 });
             },
             StdResult::Err(_e) => assert!(false)

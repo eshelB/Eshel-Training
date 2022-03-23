@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 use schemars::JsonSchema;
-use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, CanonicalAddr, HumanAddr, StdError};
+use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, CanonicalAddr, HumanAddr, StdError, Uint128};
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use secret_toolkit::serialization::{Bincode2, Serde};
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
@@ -32,10 +32,10 @@ pub fn get_constants<S: ReadonlyStorage>(storage: &S) -> StdResult<Constants> {
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct StoredCalculation {
-    pub left_operand: i64,
-    pub right_operand: Option<i64>,
+    pub left_operand: Uint128,
+    pub right_operand: Option<Uint128>,
     pub operation: Vec<u8>,
-    pub result: i64,
+    pub result: Uint128,
 }
 
 pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) -> StdResult<()> {
@@ -63,9 +63,9 @@ pub fn append_calculation<S: Storage>(
 pub fn get_calculations<S: ReadonlyStorage>(
     storage: &S,
     for_address: &CanonicalAddr,
-    page: u32,
-    page_size: u32,
-) -> StdResult<(Vec<StoredCalculation>, u64)> {
+    page: Uint128,
+    page_size: Uint128,
+) -> StdResult<(Vec<StoredCalculation>, Uint128)> {
     let store =
         ReadonlyPrefixedStorage::multilevel(&[PREFIX_CALCULATION, for_address.as_slice()], storage);
 
@@ -75,7 +75,7 @@ pub fn get_calculations<S: ReadonlyStorage>(
     let store = if let Some(result) = store {
         result?
     } else {
-        return Ok((vec![], 0));
+        return Ok((vec![], Uint128::zero()));
     };
 
     // Take `page_size` txs starting from the latest tx, potentially skipping `page * page_size`
@@ -83,8 +83,8 @@ pub fn get_calculations<S: ReadonlyStorage>(
     let calculations_iter = store
         .iter()
         .rev()
-        .skip((page * page_size) as _)
-        .take(page_size as _);
+        .skip((page.u128() * page_size.u128()) as _)
+        .take(page_size.u128() as _);
 
     let calculations: StdResult<Vec<StoredCalculation>> = calculations_iter.collect();
 
@@ -92,5 +92,5 @@ pub fn get_calculations<S: ReadonlyStorage>(
     // let calculations: StdResult<Vec<StoredCalculation>> = calculations_iter
     //     .map(|calc| calc.map(|calc| calc.into_humanized(api)).and_then(|x| x))
     //     .collect();
-    calculations.map(|txs| (txs, store.len() as u64))
+    calculations.map(|txs| (txs, Uint128::from(store.len() as u128)))
 }
