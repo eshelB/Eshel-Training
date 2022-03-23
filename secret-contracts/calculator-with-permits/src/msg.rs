@@ -8,7 +8,6 @@ use crate::state::StoredCalculation;
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // nothing to initialize in this contract
 pub struct InitMsg {}
-pub struct InitAnswer {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
