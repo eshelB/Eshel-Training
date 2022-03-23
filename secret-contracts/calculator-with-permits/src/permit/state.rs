@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+
 use cosmwasm_std::{HumanAddr, Storage};
 
 pub struct RevokedPermits;

@@ -1,10 +1,12 @@
-use serde::{Deserialize, Serialize};
-use serde::de::DeserializeOwned;
-use schemars::JsonSchema;
-use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, CanonicalAddr, HumanAddr, StdError, Uint128};
+use cosmwasm_std::{
+    CanonicalAddr, HumanAddr, ReadonlyStorage, StdError, StdResult, Storage, Uint128,
+};
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
+use schemars::JsonSchema;
 use secret_toolkit::serialization::{Bincode2, Serde};
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
 
 pub static PREFIX_CALCULATION: &[u8] = b"calc";
 pub const KEY_CONSTANTS: &[u8] = b"constants";
@@ -43,7 +45,10 @@ pub fn save<T: Serialize, S: Storage>(storage: &mut S, key: &[u8], value: &T) ->
     Ok(())
 }
 
-pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(storage: &S, key: &[u8]) -> StdResult<Option<T>> {
+pub fn may_load<T: DeserializeOwned, S: ReadonlyStorage>(
+    storage: &S,
+    key: &[u8],
+) -> StdResult<Option<T>> {
     match storage.get(key) {
         Some(value) => Bincode2::deserialize(&value).map(Some),
         None => Ok(None),
@@ -55,7 +60,8 @@ pub fn append_calculation<S: Storage>(
     calculation: &StoredCalculation,
     for_address: &CanonicalAddr,
 ) -> StdResult<()> {
-    let mut store = PrefixedStorage::multilevel(&[PREFIX_CALCULATION, for_address.as_slice()], store);
+    let mut store =
+        PrefixedStorage::multilevel(&[PREFIX_CALCULATION, for_address.as_slice()], store);
     let mut store = AppendStoreMut::attach_or_create(&mut store)?;
     store.push(calculation)
 }

@@ -1,18 +1,21 @@
 use cosmwasm_std::{
-    Api, Env, Extern, Querier, StdError, StdResult, Storage, HumanAddr, Binary, debug_print,
-    to_binary, QueryResult, HandleResult, InitResult, InitResponse, HandleResponse, Uint128
+    debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, HandleResult, HumanAddr,
+    InitResponse, InitResult, Querier, QueryResult, StdError, StdResult, Storage, Uint128,
 };
 use num_integer::Roots;
 
-use crate::permit::{
-    validate, Permission, Permit, // RevokedPermits,
-};
-
 use crate::msg::{
-    Calculation, HandleMsg, InitMsg, QueryMsg,
-    HandleAnswer, QueryAnswer, QueryWithPermit
+    Calculation, HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg, QueryWithPermit,
 };
-use crate::state::{StoredCalculation, append_calculation, get_calculations, set_constants, Constants, get_constants};
+use crate::permit::{
+    validate, // RevokedPermits,
+    Permission,
+    Permit,
+};
+use crate::state::{
+    append_calculation, get_calculations, get_constants, set_constants, Constants,
+    StoredCalculation,
+};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
@@ -20,9 +23,12 @@ pub fn init<S: Storage, A: Api, Q: Querier>(
     _msg: InitMsg,
 ) -> InitResult {
     debug_print!("Contract was initialized by {}", env.message.sender);
-    set_constants(&mut deps.storage, &Constants {
-        contract_address: env.contract.address,
-    })?;
+    set_constants(
+        &mut deps.storage,
+        &Constants {
+            contract_address: env.contract.address,
+        },
+    )?;
     Ok(InitResponse::default())
 }
 
@@ -54,7 +60,7 @@ fn save_calculation<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     calculation: StoredCalculation,
     env: Env,
-) -> StdResult<()>{
+) -> StdResult<()> {
     let sender = deps.api.canonical_address(&env.message.sender)?;
     append_calculation(&mut deps.storage, &calculation, &sender)
 }
@@ -107,7 +113,7 @@ fn try_div<S: Storage, A: Api, Q: Querier>(
     calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
-    let result = left_operand.multiply_ratio(1_u128,right_operand);
+    let result = left_operand.multiply_ratio(1_u128, right_operand);
 
     let calculation = StoredCalculation {
         left_operand: left_operand,
@@ -128,10 +134,12 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     calculation: Calculation,
 ) -> StdResult<HandleAnswer> {
     let radicand = match calculation {
-        Calculation::BinaryCalculation {..} => return Err(StdError::GenericErr {
-            msg: "This method should be called with one operand".to_string(),
-            backtrace: None,
-        }),
+        Calculation::BinaryCalculation { .. } => {
+            return Err(StdError::GenericErr {
+                msg: "This method should be called with one operand".to_string(),
+                backtrace: None,
+            })
+        }
         Calculation::UnaryCalculation { operand } => operand,
     };
 
@@ -141,7 +149,7 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
         return Err(StdError::GenericErr {
             msg: "Radicand can't be negative on Sqrt operation".to_string(),
             backtrace: None,
-        })
+        });
     }
 
     // square root rounds to the nearest integer to avoid floating point discrepancies
@@ -162,13 +170,16 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
 
 fn get_operands(binary_calculation: Calculation) -> StdResult<(Uint128, Uint128)> {
     match binary_calculation {
-        Calculation::BinaryCalculation { left_operand, right_operand } => {
-            Ok((left_operand, right_operand))
-        },
-        Calculation::UnaryCalculation { operand: _ } => return Err(StdError::GenericErr {
-            msg: "This method should be called with two operands".to_string(),
-            backtrace: None,
-        }),
+        Calculation::BinaryCalculation {
+            left_operand,
+            right_operand,
+        } => Ok((left_operand, right_operand)),
+        Calculation::UnaryCalculation { operand: _ } => {
+            return Err(StdError::GenericErr {
+                msg: "This method should be called with two operands".to_string(),
+                backtrace: None,
+            })
+        }
     }
 }
 
@@ -180,7 +191,10 @@ fn try_add<S: Storage, A: Api, Q: Querier>(
     let (left_operand, right_operand) = get_operands(calculation).unwrap();
     let result = left_operand + right_operand;
 
-    let debug_message = format!("performed {} + {} = {}", left_operand, right_operand, result);
+    let debug_message = format!(
+        "performed {} + {} = {}",
+        left_operand, right_operand, result
+    );
     println!("macro print: {}", debug_message);
     debug_print(debug_message);
 
@@ -197,10 +211,7 @@ fn try_add<S: Storage, A: Api, Q: Querier>(
     Ok(HandleAnswer::AddAnswer { result })
 }
 
-pub fn query<S: Storage, A: Api, Q: Querier>(
-    deps: &Extern<S, A, Q>,
-    msg: QueryMsg,
-) -> QueryResult {
+pub fn query<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>, msg: QueryMsg) -> QueryResult {
     match msg {
         QueryMsg::WithPermit { permit, query } => permit_queries(deps, permit, query),
     }
@@ -247,15 +258,16 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
-    use cosmwasm_std::{coins, from_binary};
     use cosmwasm_std::StdError::Underflow;
+    use cosmwasm_std::{coins, from_binary};
+
+    use super::*;
 
     fn unpack_handle<S: Storage, A: Api, Q: Querier>(
         deps: &mut Extern<S, A, Q>,
         env: Env,
-        msg: HandleMsg
+        msg: HandleMsg,
     ) -> HandleAnswer {
         let res = handle(deps, env, msg).unwrap().data.unwrap();
         from_binary(&res).unwrap()
@@ -289,7 +301,7 @@ mod tests {
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: Uint128(3),
-            }
+            },
         };
 
         let res = query(&mut deps, msg);
@@ -298,8 +310,9 @@ mod tests {
             StdResult::Err(e) => {
                 // println!("{:?}", e);
                 let expected_error = cosmwasm_std::StdError::GenericErr {
-                    msg: "Failed to verify signatures for the given permit: IncorrectSignature".to_string(),
-                    backtrace: None
+                    msg: "Failed to verify signatures for the given permit: IncorrectSignature"
+                        .to_string(),
+                    backtrace: None,
                 };
                 assert_eq!(e, expected_error);
             }
@@ -335,20 +348,24 @@ mod tests {
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: Uint128(3),
-            }
+            },
         };
 
         let res = query(&mut deps, msg);
         match res {
             StdResult::Ok(raw_res) => {
                 let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                let deserialized_result: QueryAnswer =
+                    serde_json::from_str(response_string.as_str()).unwrap();
                 println!("the result is: {:?}", deserialized_result);
-                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
-                    calcs: vec![],
-                    total: Some(Uint128::zero()),
-                });
-            },
+                assert_eq!(
+                    deserialized_result,
+                    QueryAnswer::CalculationHistory {
+                        calcs: vec![],
+                        total: Some(Uint128::zero()),
+                    }
+                );
+            }
             StdResult::Err(e) => {
                 println!("{:?}", e);
                 assert!(false)
@@ -356,10 +373,10 @@ mod tests {
         }
 
         let msg = HandleMsg::Add {
-             calculation: Calculation::BinaryCalculation {
-                 left_operand: Uint128(12),
-                 right_operand: Uint128(30)
-             },
+            calculation: Calculation::BinaryCalculation {
+                left_operand: Uint128(12),
+                right_operand: Uint128(30),
+            },
         };
 
         // it must be this key since that is who signed the previous query
@@ -375,26 +392,30 @@ mod tests {
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: Uint128(3),
-            }
+            },
         };
 
         let res = query(&mut deps, msg);
         match res {
             StdResult::Ok(raw_res) => {
                 let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                let deserialized_result: QueryAnswer =
+                    serde_json::from_str(response_string.as_str()).unwrap();
                 println!("the result is: {:?}", deserialized_result);
-                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
-                    calcs: vec![StoredCalculation{
-                        left_operand: Uint128(12),
-                        right_operand: Some(Uint128(30)),
-                        operation: "Add".as_bytes().to_vec(),
-                        result: Uint128(42)
-                    }],
-                    total: Some(Uint128(1)),
-                });
-            },
-            StdResult::Err(_e) => assert!(false)
+                assert_eq!(
+                    deserialized_result,
+                    QueryAnswer::CalculationHistory {
+                        calcs: vec![StoredCalculation {
+                            left_operand: Uint128(12),
+                            right_operand: Some(Uint128(30)),
+                            operation: "Add".as_bytes().to_vec(),
+                            result: Uint128(42)
+                        }],
+                        total: Some(Uint128(1)),
+                    }
+                );
+            }
+            StdResult::Err(_e) => assert!(false),
         }
     }
 
@@ -405,7 +426,7 @@ mod tests {
         let msg = HandleMsg::Sub {
             calculation: Calculation::BinaryCalculation {
                 left_operand: Uint128(23),
-                right_operand: Uint128(113)
+                right_operand: Uint128(113),
             },
         };
 
@@ -414,12 +435,15 @@ mod tests {
         match res {
             Err(e) => {
                 println!("{:?}", e);
-                assert_eq!(e, Underflow {
-                    minuend: "23".to_string(),
-                    subtrahend: "113".to_string(),
-                    backtrace: None
-                })
-            },
+                assert_eq!(
+                    e,
+                    Underflow {
+                        minuend: "23".to_string(),
+                        subtrahend: "113".to_string(),
+                        backtrace: None
+                    }
+                )
+            }
             _ => assert!(false),
         };
 
@@ -435,7 +459,7 @@ mod tests {
         let msg = HandleMsg::Sub {
             calculation: Calculation::BinaryCalculation {
                 left_operand: Uint128(123),
-                right_operand: Uint128(13)
+                right_operand: Uint128(13),
             },
         };
 
@@ -452,26 +476,30 @@ mod tests {
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: Uint128(3),
-            }
+            },
         };
 
         let res = query(&mut deps, msg);
         match res {
             StdResult::Ok(raw_res) => {
                 let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                let deserialized_result: QueryAnswer =
+                    serde_json::from_str(response_string.as_str()).unwrap();
                 println!("the result is: {:?}", deserialized_result);
-                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
-                    calcs: vec![StoredCalculation{
-                        left_operand: Uint128(123),
-                        right_operand: Some(Uint128(13)),
-                        operation: "Sub".as_bytes().to_vec(),
-                        result: Uint128(110)
-                    }],
-                    total: Some(Uint128(1)),
-                });
-            },
-            StdResult::Err(_e) => assert!(false)
+                assert_eq!(
+                    deserialized_result,
+                    QueryAnswer::CalculationHistory {
+                        calcs: vec![StoredCalculation {
+                            left_operand: Uint128(123),
+                            right_operand: Some(Uint128(13)),
+                            operation: "Sub".as_bytes().to_vec(),
+                            result: Uint128(110)
+                        }],
+                        total: Some(Uint128(1)),
+                    }
+                );
+            }
+            StdResult::Err(_e) => assert!(false),
         }
     }
 
@@ -484,7 +512,7 @@ mod tests {
         let msg = HandleMsg::Mul {
             calculation: Calculation::BinaryCalculation {
                 left_operand: Uint128(23),
-                right_operand: Uint128(50)
+                right_operand: Uint128(50),
             },
         };
 
@@ -501,25 +529,29 @@ mod tests {
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: Uint128(3),
-            }
+            },
         };
 
         let res = query(&mut deps, msg);
         match res {
             StdResult::Ok(raw_res) => {
                 let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                let deserialized_result: QueryAnswer =
+                    serde_json::from_str(response_string.as_str()).unwrap();
                 println!("the result is: {:?}", deserialized_result);
-                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
-                    calcs: vec![StoredCalculation{
-                        left_operand: Uint128(23),
-                        right_operand: Some(Uint128(50)),
-                        operation: "Mul".as_bytes().to_vec(),
-                        result: Uint128(1150)
-                    }],
-                    total: Some(Uint128(1)),
-                });
-            },
+                assert_eq!(
+                    deserialized_result,
+                    QueryAnswer::CalculationHistory {
+                        calcs: vec![StoredCalculation {
+                            left_operand: Uint128(23),
+                            right_operand: Some(Uint128(50)),
+                            operation: "Mul".as_bytes().to_vec(),
+                            result: Uint128(1150)
+                        }],
+                        total: Some(Uint128(1)),
+                    }
+                );
+            }
             StdResult::Err(e) => {
                 println!("{:?}", e);
                 assert!(false)
@@ -536,7 +568,7 @@ mod tests {
         let msg = HandleMsg::Div {
             calculation: Calculation::BinaryCalculation {
                 left_operand: Uint128(23),
-                right_operand: Uint128(50)
+                right_operand: Uint128(50),
             },
         };
 
@@ -553,26 +585,30 @@ mod tests {
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: Uint128(3),
-            }
+            },
         };
 
         let res = query(&mut deps, msg);
         match res {
             StdResult::Ok(raw_res) => {
                 let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                let deserialized_result: QueryAnswer =
+                    serde_json::from_str(response_string.as_str()).unwrap();
                 println!("the result is: {:?}", deserialized_result);
-                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
-                    calcs: vec![StoredCalculation{
-                        left_operand: Uint128(23),
-                        right_operand: Some(Uint128(50)),
-                        operation: "Div".as_bytes().to_vec(),
-                        result: Uint128(0)
-                    }],
-                    total: Some(Uint128(1)),
-                });
-            },
-            StdResult::Err(_e) => assert!(false)
+                assert_eq!(
+                    deserialized_result,
+                    QueryAnswer::CalculationHistory {
+                        calcs: vec![StoredCalculation {
+                            left_operand: Uint128(23),
+                            right_operand: Some(Uint128(50)),
+                            operation: "Div".as_bytes().to_vec(),
+                            result: Uint128(0)
+                        }],
+                        total: Some(Uint128(1)),
+                    }
+                );
+            }
+            StdResult::Err(_e) => assert!(false),
         }
     }
 
@@ -601,26 +637,30 @@ mod tests {
             query: QueryWithPermit::CalculationHistory {
                 page: None,
                 page_size: Uint128(3),
-            }
+            },
         };
 
         let res = query(&mut deps, msg);
         match res {
             StdResult::Ok(raw_res) => {
                 let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer = serde_json::from_str(response_string.as_str()).unwrap();
+                let deserialized_result: QueryAnswer =
+                    serde_json::from_str(response_string.as_str()).unwrap();
                 println!("the result is: {:?}", deserialized_result);
-                assert_eq!(deserialized_result, QueryAnswer::CalculationHistory {
-                    calcs: vec![StoredCalculation{
-                        left_operand: Uint128(17),
-                        right_operand: None,
-                        operation: "Sqrt".as_bytes().to_vec(),
-                        result: Uint128(4)
-                    }],
-                    total: Some(Uint128(1)),
-                });
-            },
-            StdResult::Err(_e) => assert!(false)
+                assert_eq!(
+                    deserialized_result,
+                    QueryAnswer::CalculationHistory {
+                        calcs: vec![StoredCalculation {
+                            left_operand: Uint128(17),
+                            right_operand: None,
+                            operation: "Sqrt".as_bytes().to_vec(),
+                            result: Uint128(4)
+                        }],
+                        total: Some(Uint128(1)),
+                    }
+                );
+            }
+            StdResult::Err(_e) => assert!(false),
         }
     }
 }

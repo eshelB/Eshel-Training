@@ -1,15 +1,16 @@
+use cosmwasm_std::{Binary, Uint128};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cosmwasm_std::{Binary, Uint128};
-use crate::state::StoredCalculation;
+
 use crate::permit::Permit;
+use crate::state::StoredCalculation;
 
 pub type QueryResponse = Binary;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // nothing to initialize in this contract
-pub struct InitMsg { }
-pub struct InitAnswer { }
+pub struct InitMsg {}
+pub struct InitAnswer {}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -45,7 +46,7 @@ pub enum QueryAnswer {
     CalculationHistory {
         calcs: Vec<StoredCalculation>,
         total: Option<Uint128>,
-    }
+    },
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
