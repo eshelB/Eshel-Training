@@ -9,27 +9,28 @@
   ],
   "properties": {
     "left_operand": {
-      "type": "integer",
-      "format": "int64"
+      "$ref": "#/definitions/Uint128"
     },
     "operation": {
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "format": "uint8",
-        "minimum": 0.0
-      }
+      "type": "string"
     },
     "result": {
-      "type": "integer",
-      "format": "int64"
+      "$ref": "#/definitions/Uint128"
     },
     "right_operand": {
-      "type": [
-        "integer",
-        "null"
-      ],
-      "format": "int64"
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Uint128"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "Uint128": {
+      "type": "string"
     }
   }
 }

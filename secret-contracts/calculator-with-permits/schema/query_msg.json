@@ -135,23 +135,26 @@
               ],
               "properties": {
                 "page": {
-                  "type": [
-                    "integer",
-                    "null"
-                  ],
-                  "format": "uint32",
-                  "minimum": 0.0
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Uint128"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 },
                 "page_size": {
-                  "type": "integer",
-                  "format": "uint32",
-                  "minimum": 0.0
+                  "$ref": "#/definitions/Uint128"
                 }
               }
             }
           }
         }
       ]
+    },
+    "Uint128": {
+      "type": "string"
     }
   }
 }
