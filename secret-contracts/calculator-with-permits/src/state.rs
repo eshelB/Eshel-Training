@@ -34,7 +34,7 @@ pub fn get_constants<S: ReadonlyStorage>(storage: &S) -> StdResult<Constants> {
 pub struct StoredCalculation {
     pub left_operand: Uint128,
     pub right_operand: Option<Uint128>,
-    pub operation: Vec<u8>,
+    pub operation: String,
     pub result: Uint128,
 }
 

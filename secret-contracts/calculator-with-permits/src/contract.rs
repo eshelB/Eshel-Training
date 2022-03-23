@@ -75,7 +75,7 @@ fn add<S: Storage, A: Api, Q: Querier>(
     let calculation = StoredCalculation {
         left_operand,
         right_operand: Some(right_operand),
-        operation: "Add".as_bytes().to_vec(),
+        operation: "Add".to_string(),
         result,
     };
 
@@ -101,7 +101,7 @@ fn sub<S: Storage, A: Api, Q: Querier>(
     let calculation = StoredCalculation {
         left_operand,
         right_operand: Some(right_operand),
-        operation: "Sub".as_bytes().to_vec(),
+        operation: "Sub".to_string(),
         result,
     };
 
@@ -127,7 +127,7 @@ fn mul<S: Storage, A: Api, Q: Querier>(
     let calculation = StoredCalculation {
         left_operand,
         right_operand: Some(right_operand),
-        operation: "Mul".as_bytes().to_vec(),
+        operation: "Mul".to_string(),
         result: Uint128::from(result),
     };
 
@@ -153,7 +153,7 @@ fn div<S: Storage, A: Api, Q: Querier>(
     let calculation = StoredCalculation {
         left_operand,
         right_operand: Some(right_operand),
-        operation: "Div".as_bytes().to_vec(),
+        operation: "Div".to_string(),
         result,
     };
 
@@ -175,7 +175,7 @@ fn sqrt<S: Storage, A: Api, Q: Querier>(
     let calculation = StoredCalculation {
         left_operand: radicand,
         right_operand: None,
-        operation: "Sqrt".as_bytes().to_vec(),
+        operation: "Sqrt".to_string(),
         result,
     };
 
@@ -369,7 +369,7 @@ mod tests {
                         calcs: vec![StoredCalculation {
                             left_operand: Uint128(12),
                             right_operand: Some(Uint128(30)),
-                            operation: "Add".as_bytes().to_vec(),
+                            operation: "Add".to_string(),
                             result: Uint128(42)
                         }],
                         total: Some(Uint128(1)),
@@ -433,7 +433,7 @@ mod tests {
                         calcs: vec![StoredCalculation {
                             left_operand: Uint128(123),
                             right_operand: Some(Uint128(13)),
-                            operation: "Sub".as_bytes().to_vec(),
+                            operation: "Sub".to_string(),
                             result: Uint128(110)
                         }],
                         total: Some(Uint128(1)),
@@ -478,7 +478,7 @@ mod tests {
                         calcs: vec![StoredCalculation {
                             left_operand: Uint128(23),
                             right_operand: Some(Uint128(50)),
-                            operation: "Mul".as_bytes().to_vec(),
+                            operation: "Mul".to_string(),
                             result: Uint128(1150)
                         }],
                         total: Some(Uint128(1)),
@@ -526,7 +526,7 @@ mod tests {
                         calcs: vec![StoredCalculation {
                             left_operand: Uint128(23),
                             right_operand: Some(Uint128(50)),
-                            operation: "Div".as_bytes().to_vec(),
+                            operation: "Div".to_string(),
                             result: Uint128(0)
                         }],
                         total: Some(Uint128(1)),
@@ -571,7 +571,7 @@ mod tests {
                         calcs: vec![StoredCalculation {
                             left_operand: Uint128(17),
                             right_operand: None,
-                            operation: "Sqrt".as_bytes().to_vec(),
+                            operation: "Sqrt".to_string(),
                             result: Uint128(4)
                         }],
                         total: Some(Uint128(1)),
