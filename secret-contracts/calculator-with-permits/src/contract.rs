@@ -74,10 +74,10 @@ fn try_sub<S: Storage, A: Api, Q: Querier>(
     let result = (left_operand - right_operand)?;
 
     let calculation = StoredCalculation {
-        left_operand: left_operand,
+        left_operand,
         right_operand: Some(right_operand),
         operation: "Sub".as_bytes().to_vec(),
-        result: result,
+        result,
     };
 
     save_calculation(deps, calculation, env)?;
@@ -95,7 +95,7 @@ fn try_mul<S: Storage, A: Api, Q: Querier>(
     let result = Uint128::from(left_operand.u128() * right_operand.u128());
 
     let calculation = StoredCalculation {
-        left_operand: left_operand,
+        left_operand,
         right_operand: Some(right_operand),
         operation: "Mul".as_bytes().to_vec(),
         result,
@@ -116,10 +116,10 @@ fn try_div<S: Storage, A: Api, Q: Querier>(
     let result = left_operand.multiply_ratio(1_u128, right_operand);
 
     let calculation = StoredCalculation {
-        left_operand: left_operand,
+        left_operand,
         right_operand: Some(right_operand),
         operation: "Div".as_bytes().to_vec(),
-        result: result,
+        result,
     };
 
     save_calculation(deps, calculation, env)?;
@@ -174,12 +174,10 @@ fn get_operands(binary_calculation: Calculation) -> StdResult<(Uint128, Uint128)
             left_operand,
             right_operand,
         } => Ok((left_operand, right_operand)),
-        Calculation::UnaryCalculation { operand: _ } => {
-            return Err(StdError::GenericErr {
-                msg: "This method should be called with two operands".to_string(),
-                backtrace: None,
-            })
-        }
+        Calculation::UnaryCalculation { operand: _ } => Err(StdError::GenericErr {
+            msg: "This method should be called with two operands".to_string(),
+            backtrace: None,
+        }),
     }
 }
 
@@ -199,10 +197,10 @@ fn try_add<S: Storage, A: Api, Q: Querier>(
     debug_print(debug_message);
 
     let calculation = StoredCalculation {
-        left_operand: left_operand,
+        left_operand,
         right_operand: Some(right_operand),
         operation: "Add".as_bytes().to_vec(),
-        result: result,
+        result,
     };
 
     save_calculation(deps, calculation, env)?;
@@ -224,7 +222,7 @@ fn permit_queries<S: Storage, A: Api, Q: Querier>(
 ) -> QueryResult {
     let contract_address = get_constants(&deps.storage)?.contract_address;
 
-    let account = validate(deps, &"", &permit, contract_address)?;
+    let account = validate(deps, "", &permit, contract_address)?;
 
     match query {
         QueryWithPermit::CalculationHistory { page, page_size } => {
