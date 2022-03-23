@@ -66,7 +66,12 @@ fn add<S: Storage, A: Api, Q: Querier>(
     calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = (calculation.0, calculation.1);
-    let result = left_operand + right_operand;
+    let result = Uint128::from(
+        left_operand
+            .u128()
+            .checked_add(right_operand.u128())
+            .ok_or_else(|| StdError::generic_err(format!("Overflow in Add operation")))?,
+    );
 
     let debug_message = format!(
         "performed {} + {} = {}",
@@ -94,7 +99,12 @@ fn sub<S: Storage, A: Api, Q: Querier>(
     calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = (calculation.0, calculation.1);
-    let result = (left_operand - right_operand)?;
+    let result = Uint128::from(
+        left_operand
+            .u128()
+            .checked_sub(right_operand.u128())
+            .ok_or_else(|| StdError::generic_err(format!("Underflow in Sub operation")))?,
+    );
 
     let calculation = StoredCalculation {
         left_operand,
@@ -115,13 +125,18 @@ fn mul<S: Storage, A: Api, Q: Querier>(
     calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = (calculation.0, calculation.1);
-    let result = Uint128::from(left_operand.u128() * right_operand.u128());
+    let result = Uint128::from(
+        left_operand
+            .u128()
+            .checked_mul(right_operand.u128())
+            .ok_or_else(|| StdError::generic_err(format!("Overflow in Mul operation")))?,
+    );
 
     let calculation = StoredCalculation {
         left_operand,
         right_operand: Some(right_operand),
         operation: "Mul".as_bytes().to_vec(),
-        result,
+        result: Uint128::from(result),
     };
 
     save_calculation(deps, calculation, env)?;
@@ -136,7 +151,12 @@ fn div<S: Storage, A: Api, Q: Querier>(
     calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = (calculation.0, calculation.1);
-    let result = left_operand.multiply_ratio(1_u128, right_operand);
+    let result = Uint128::from(
+        left_operand
+            .u128()
+            .checked_div(right_operand.u128())
+            .ok_or_else(|| StdError::generic_err(format!("Underflow in Div operation")))?,
+    );
 
     let calculation = StoredCalculation {
         left_operand,
@@ -158,9 +178,7 @@ fn sqrt<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<HandleAnswer> {
     let radicand = calculation.0;
 
-    // square root rounds to the nearest integer to avoid floating point discrepancies
     let result = Uint128::from(radicand.u128().sqrt());
-    // let result = radicand.sqrt();
 
     let calculation = StoredCalculation {
         left_operand: radicand,
@@ -222,7 +240,7 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
 #[cfg(test)]
 mod tests {
     use cosmwasm_std::testing::{mock_dependencies, mock_env};
-    use cosmwasm_std::StdError::Underflow;
+    use cosmwasm_std::StdError::GenericErr;
     use cosmwasm_std::{coins, from_binary};
 
     use super::*;
@@ -388,9 +406,8 @@ mod tests {
                 println!("{:?}", e);
                 assert_eq!(
                     e,
-                    Underflow {
-                        minuend: "23".to_string(),
-                        subtrahend: "113".to_string(),
+                    GenericErr {
+                        msg: "Underflow in Sub operation".to_string(),
                         backtrace: None
                     }
                 )
