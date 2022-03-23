@@ -60,6 +60,34 @@ fn save_calculation<S: Storage, A: Api, Q: Querier>(
     append_calculation(&mut deps.storage, &calculation, &env.message.sender)
 }
 
+fn try_add<S: Storage, A: Api, Q: Querier>(
+    deps: &mut Extern<S, A, Q>,
+    env: Env,
+    calculation: BinaryOp,
+) -> StdResult<HandleAnswer> {
+    let (left_operand, right_operand) = (calculation.0, calculation.1);
+    let result = left_operand + right_operand;
+
+    let debug_message = format!(
+        "performed {} + {} = {}",
+        left_operand, right_operand, result
+    );
+    println!("macro print: {}", debug_message);
+    debug_print(debug_message);
+
+    let calculation = StoredCalculation {
+        left_operand,
+        right_operand: Some(right_operand),
+        operation: "Add".as_bytes().to_vec(),
+        result,
+    };
+
+    save_calculation(deps, calculation, env)?;
+
+    debug_print("Add: saved history successfully");
+    Ok(HandleAnswer(result))
+}
+
 fn try_sub<S: Storage, A: Api, Q: Querier>(
     deps: &mut Extern<S, A, Q>,
     env: Env,
@@ -144,34 +172,6 @@ fn try_sqrt<S: Storage, A: Api, Q: Querier>(
     save_calculation(deps, calculation, env)?;
 
     debug_print("Sqrt: saved history successfully");
-    Ok(HandleAnswer(result))
-}
-
-fn try_add<S: Storage, A: Api, Q: Querier>(
-    deps: &mut Extern<S, A, Q>,
-    env: Env,
-    calculation: BinaryOp,
-) -> StdResult<HandleAnswer> {
-    let (left_operand, right_operand) = (calculation.0, calculation.1);
-    let result = left_operand + right_operand;
-
-    let debug_message = format!(
-        "performed {} + {} = {}",
-        left_operand, right_operand, result
-    );
-    println!("macro print: {}", debug_message);
-    debug_print(debug_message);
-
-    let calculation = StoredCalculation {
-        left_operand,
-        right_operand: Some(right_operand),
-        operation: "Add".as_bytes().to_vec(),
-        result,
-    };
-
-    save_calculation(deps, calculation, env)?;
-
-    debug_print("Add: saved history successfully");
     Ok(HandleAnswer(result))
 }
 
