@@ -11,14 +11,17 @@ use crate::msg::{
     Calculation, HandleMsg, InitMsg, QueryMsg,
     HandleAnswer, QueryAnswer, QueryWithPermit
 };
-use crate::state::{StoredCalculation, append_calculation, get_calculations};
+use crate::state::{StoredCalculation, append_calculation, get_calculations, set_constants, Constants, get_constants};
 
 pub fn init<S: Storage, A: Api, Q: Querier>(
-    _deps: &mut Extern<S, A, Q>,
+    deps: &mut Extern<S, A, Q>,
     env: Env,
     _msg: InitMsg,
 ) -> InitResult {
     debug_print!("Contract was initialized by {}", env.message.sender);
+    set_constants(&mut deps.storage, &Constants {
+        contract_address: env.contract.address,
+    })?;
     Ok(InitResponse::default())
 }
 
@@ -208,8 +211,9 @@ fn permit_queries<S: Storage, A: Api, Q: Querier>(
     permit: Permit,
     query: QueryWithPermit,
 ) -> QueryResult {
-    //todo use address from constructor
-    let account = validate(deps, &"", &permit, HumanAddr("thisaddress".to_string()))?;
+    let contract_address = get_constants(&deps.storage)?.contract_address;
+
+    let account = validate(deps, &"", &permit, contract_address)?;
 
     match query {
         QueryWithPermit::CalculationHistory { page, page_size } => {
@@ -259,12 +263,14 @@ mod tests {
     #[test]
     fn bad_permit() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {}).unwrap();
 
         // invalid permit: the given signature signed chain_id="secret-4"
         let bad_permit = r#"{
             "params": {
                 "permit_name":"test",
-                "allowed_contracts": ["thisaddress"],
+                "allowed_contracts": ["cosmos2contract"],
                 "chain_id": "secret-5",
                 "permissions": ["calculation_history"]
             },
@@ -273,7 +279,7 @@ mod tests {
                     "type": "tendermint/PubKeySecp256k1",
                     "value":"A31nYb+/VgwXsjhgmdkRotRexaDmgblDlhQja/rtEKwW"
                 },
-                "signature":"uHgywngtXSRaQcg4CFEJkExQN/VUgo7ul12zar/vwghtUiY3JPZQKPt7GpuV/WuDM94FRI4YuD7beA3w9JpnBA=="
+                "signature":"QTVNw3CjT0wTRsPiWHpgZrP7lsDyzWFUv0qNLnhmptdRh0Kn40bGnmxqNapFQR4Iddd2B4kF1Vjyx1DM96sP+g=="
             }
         }"#;
 
@@ -302,7 +308,7 @@ mod tests {
     const PERMIT: &str = r#"{
         "params": {
             "permit_name":"test",
-            "allowed_contracts": ["thisaddress"],
+            "allowed_contracts": ["cosmos2contract"],
             "chain_id": "secret-4",
             "permissions": ["calculation_history"]
         },
@@ -311,13 +317,16 @@ mod tests {
                 "type": "tendermint/PubKeySecp256k1",
                 "value":"A31nYb+/VgwXsjhgmdkRotRexaDmgblDlhQja/rtEKwW"
             },
-            "signature":"uHgywngtXSRaQcg4CFEJkExQN/VUgo7ul12zar/vwghtUiY3JPZQKPt7GpuV/WuDM94FRI4YuD7beA3w9JpnBA=="
+            "signature":"QTVNw3CjT0wTRsPiWHpgZrP7lsDyzWFUv0qNLnhmptdRh0Kn40bGnmxqNapFQR4Iddd2B4kF1Vjyx1DM96sP+g=="
         }
     }"#;
 
     #[test]
+    #[allow(unused_must_use)]
     fn add() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {});
 
         // initial calculation history for an account should be unexistent
         let msg = QueryMsg::WithPermit {
@@ -348,6 +357,8 @@ mod tests {
                  right_operand: 30
              },
         };
+
+
         // it must be this key since that is who signed the previous query
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = unpack_handle(&mut deps, env, msg);
@@ -387,6 +398,8 @@ mod tests {
     #[test]
     fn sub() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {}).unwrap();
 
         let msg = HandleMsg::Sub {
             calculation: Calculation::BinaryCalculation {
@@ -434,6 +447,8 @@ mod tests {
     #[test]
     fn mul() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {}).unwrap();
 
         let msg = HandleMsg::Mul {
             calculation: Calculation::BinaryCalculation {
@@ -474,13 +489,18 @@ mod tests {
                     total: Some(1),
                 });
             },
-            StdResult::Err(_e) => assert!(false)
+            StdResult::Err(e) => {
+                println!("{:?}", e);
+                assert!(false)
+            }
         }
     }
 
     #[test]
     fn div() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {}).unwrap();
 
         let msg = HandleMsg::Div {
             calculation: Calculation::BinaryCalculation {
@@ -494,7 +514,9 @@ mod tests {
         let res = unpack_handle(&mut deps, env, msg);
         match res {
             HandleAnswer::DivAnswer { result } => assert_eq!(result, 0),
-            _ => assert!(false),
+            _ => {
+                assert!(false)
+            },
         };
 
         let msg = QueryMsg::WithPermit {
@@ -528,6 +550,8 @@ mod tests {
     #[test]
     fn sqrt() {
         let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {}).unwrap();
 
         let msg = HandleMsg::Sqrt {
             calculation: Calculation::UnaryCalculation {

@@ -1,12 +1,33 @@
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 use schemars::JsonSchema;
-use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, CanonicalAddr};
+use cosmwasm_std::{Storage, ReadonlyStorage, StdResult, CanonicalAddr, HumanAddr, StdError};
 use cosmwasm_storage::{PrefixedStorage, ReadonlyPrefixedStorage};
 use secret_toolkit::serialization::{Bincode2, Serde};
 use secret_toolkit::storage::{AppendStore, AppendStoreMut};
 
 pub static PREFIX_CALCULATION: &[u8] = b"calc";
+pub const KEY_CONSTANTS: &[u8] = b"constants";
+
+#[derive(Serialize, Debug, Deserialize, Clone, PartialEq, JsonSchema)]
+pub struct Constants {
+    pub contract_address: HumanAddr,
+}
+
+pub fn set_constants<S: Storage>(storage: &mut S, value: &Constants) -> StdResult<()> {
+    storage.set(KEY_CONSTANTS, &Bincode2::serialize(value)?);
+    Ok(())
+}
+
+pub fn get_constants<S: ReadonlyStorage>(storage: &S) -> StdResult<Constants> {
+    match storage.get(KEY_CONSTANTS) {
+        Some(value) => Bincode2::deserialize(&value),
+        None => Err(StdError::NotFound {
+            kind: "Error getting constants".to_string(),
+            backtrace: None,
+        }),
+    }
+}
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
