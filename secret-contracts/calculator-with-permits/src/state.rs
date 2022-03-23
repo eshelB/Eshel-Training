@@ -78,10 +78,9 @@ pub fn get_calculations<S: ReadonlyStorage>(
     // Try to access the storage of calculations for the account.
     // If it doesn't exist yet, return an empty list of calculations.
     let store = AppendStore::<StoredCalculation, _, _>::attach(&store);
-    let store = if let Some(result) = store {
-        result?
-    } else {
-        return Ok((vec![], Uint128::zero()));
+    let store = match store {
+        Some(result) => result?,
+        None => return Ok((vec![], Uint128::zero())),
     };
 
     // Take `page_size` txs starting from the latest tx, potentially skipping `page * page_size`
