@@ -198,7 +198,7 @@ fn permit_queries<S: Storage, A: Api, Q: Querier>(
 ) -> QueryResult {
     let contract_address = get_constants(&deps.storage)?.contract_address;
 
-    let account = validate(deps, "", &permit, contract_address)?;
+    let account = validate(deps, "revoked_permits", &permit, contract_address)?;
 
     match query {
         QueryWithPermit::CalculationHistory { page, page_size } => {
