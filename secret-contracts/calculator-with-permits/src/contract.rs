@@ -7,11 +7,7 @@ use integer_sqrt::IntegerSquareRoot;
 use crate::msg::{
     BinaryOp, HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg, QueryWithPermit, UnaryOp,
 };
-use crate::permit::{
-    validate, // RevokedPermits,
-    Permission,
-    Permit,
-};
+use crate::permit::{validate, Permission, Permit};
 use crate::state::{
     append_calculation, get_calculations, get_constants, set_constants, Constants,
     StoredCalculation,
@@ -230,12 +226,13 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
 
 #[cfg(test)]
 mod tests {
-    use cosmwasm_std::testing::{mock_dependencies, mock_env};
+    use crate::test_utils::my_mock_dependencies;
+    use cosmwasm_std::testing::mock_env;
     use cosmwasm_std::{coins, from_binary};
 
     use super::*;
 
-    fn unpack_handle<S: Storage, A: Api, Q: Querier>(
+    pub fn unpack_handle<S: Storage, A: Api, Q: Querier>(
         deps: &mut Extern<S, A, Q>,
         env: Env,
         msg: HandleMsg,
@@ -246,7 +243,7 @@ mod tests {
 
     #[test]
     fn bad_permit() {
-        let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
@@ -307,7 +304,7 @@ mod tests {
 
     #[test]
     fn add() {
-        let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
@@ -382,7 +379,7 @@ mod tests {
 
     #[test]
     fn sub_underflow() {
-        let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
@@ -401,7 +398,7 @@ mod tests {
 
     #[test]
     fn sub() {
-        let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
@@ -446,7 +443,7 @@ mod tests {
 
     #[test]
     fn mul() {
-        let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
@@ -494,7 +491,7 @@ mod tests {
 
     #[test]
     fn div() {
-        let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
@@ -539,7 +536,7 @@ mod tests {
 
     #[test]
     fn sqrt() {
-        let mut deps = mock_dependencies(20, &coins(2, "token"));
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         init(&mut deps, env, InitMsg {}).unwrap();
 
