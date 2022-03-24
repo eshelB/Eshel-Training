@@ -79,10 +79,10 @@ pub fn pubkey_to_identifier_address(pubkey: &Binary) -> CanonicalAddr {
     let mut hasher = Ripemd160::new();
     hasher.update(secret_toolkit::crypto::sha_256(&pubkey.0));
     // original implementation:
-    // CanonicalAddr(Binary(hasher.finalize().to_vec()))
+    CanonicalAddr(Binary(hasher.finalize().to_vec()))
     // new implementation:
-    let hashbytes = hasher.finalize().to_vec();
-    let mut stringbytes = base64::encode(hashbytes).as_bytes().to_vec();
-    stringbytes.truncate(20);
-    CanonicalAddr(Binary(stringbytes))
+    // let hashbytes = hasher.finalize().to_vec();
+    // let mut stringbytes = base64::encode(hashbytes).as_bytes().to_vec();
+    // stringbytes.truncate(20);
+    // CanonicalAddr(Binary(stringbytes))
 }

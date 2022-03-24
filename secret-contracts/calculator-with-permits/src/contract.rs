@@ -2,7 +2,7 @@ use cosmwasm_std::{
     debug_print, to_binary, Api, Binary, Env, Extern, HandleResponse, HandleResult, HumanAddr,
     InitResponse, InitResult, Querier, QueryResult, StdError, StdResult, Storage, Uint128,
 };
-use num_integer::Roots;
+use integer_sqrt::IntegerSquareRoot;
 
 use crate::msg::{
     BinaryOp, HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg, QueryWithPermit, UnaryOp,
@@ -170,7 +170,7 @@ fn sqrt<S: Storage, A: Api, Q: Querier>(
 ) -> StdResult<HandleAnswer> {
     let radicand = calculation.0;
 
-    let result = Uint128::from(radicand.u128().sqrt());
+    let result = Uint128::from(radicand.u128().integer_sqrt());
 
     let calculation = StoredCalculation {
         left_operand: radicand,
