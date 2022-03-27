@@ -230,16 +230,28 @@ function test_query_with_permit_after() {
     local permit
     local permit_query
     local expected_output
+    local sig
     permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
+
+    key=a
     expected_output='{"calculation_history":{"calcs":[{"left_operand":"23","right_operand":null,"operation":"Sqrt","result":"4"},{"left_operand":"23","right_operand":"3","operation":"Div","result":"7"},{"left_operand":"23","right_operand":"3","operation":"Mul","result":"69"}],"total":"5"}}'
 
-    permit=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '"$permit"') --from '$key'")
-    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$permit"'}}}'
+    sig=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '"$permit"') --from '$key'")
+    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$sig"'}}}'
     result="$(compute_query "$contract_addr" "$permit_query" 2>&1 || true )"
     result_comparable=$(echo $result | sed 's/ Usage:.*//')
-
     assert_eq "$result_comparable" "$expected_output"
-    log "permit correct: ASSERTION_SUCCESS"
+    log "query result populated history: ASSERTION_SUCCESS"
+
+    key=b
+    expected_output='{"calculation_history":{"calcs":[],"total":"0"}}'
+
+    sig=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '"$permit"') --from '$key'")
+    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$sig"'}}}'
+    result="$(compute_query "$contract_addr" "$permit_query" 2>&1 || true )"
+    result_comparable=$(echo $result | sed 's/ Usage:.*//')
+    assert_eq "$result_comparable" "$expected_output"
+    log "query result for empty history: ASSERTION_SUCCESS"
 }
 
 function test_permit() {
