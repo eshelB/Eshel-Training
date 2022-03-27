@@ -6,16 +6,12 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./secret-contracts/calculator-with-permits
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
-        working-directory: ./secret-contracts/calculator-with-permits
         with:
           profile: minimal
           toolchain: 1.46.0
@@ -23,8 +19,8 @@ jobs:
           override: true
 
       - name: Run unit tests
-        uses: actions-rs/cargo@v1
         working-directory: ./secret-contracts/calculator-with-permits
+        uses: actions-rs/cargo@v1
         with:
           command: unit-test
           args: --locked
@@ -32,8 +28,8 @@ jobs:
           RUST_BACKTRACE: 1
 
       - name: Compile WASM contract
-        uses: actions-rs/cargo@v1
         working-directory: ./secret-contracts/calculator-with-permits
+        uses: actions-rs/cargo@v1
         with:
           command: wasm
           args: --locked
@@ -41,8 +37,8 @@ jobs:
           RUSTFLAGS: "-C link-arg=-s"
 
       - name: Run integration tests
-        uses: actions-rs/cargo@v1
         working-directory: ./secret-contracts/calculator-with-permits
+        uses: actions-rs/cargo@v1
         with:
           command: integration-test
           args: --locked
@@ -51,17 +47,13 @@ jobs:
   lints:
     name: Lints
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./secret-contracts/calculator-with-permits
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
-        working-directory: ./secret-contracts/calculator-with-permits
 
       - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
         working-directory: ./secret-contracts/calculator-with-permits
+        uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: 1.46.0
@@ -69,15 +61,15 @@ jobs:
           components: rustfmt, clippy
 
       - name: Run cargo fmt
-        uses: actions-rs/cargo@v1
         working-directory: ./secret-contracts/calculator-with-permits
+        uses: actions-rs/cargo@v1
         with:
           command: fmt
           args: --all -- --check
 
       - name: Run cargo clippy
-        uses: actions-rs/cargo@v1
         working-directory: ./secret-contracts/calculator-with-permits
+        uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: -- -D warnings
@@ -86,7 +78,7 @@ jobs:
       # CHANGES_IN_REPO=$(git status --porcelain)
       # after this, but I don't know how
       - name: Generate Schema
-        uses: actions-rs/cargo@v1
         working-directory: ./secret-contracts/calculator-with-permits
+        uses: actions-rs/cargo@v1
         with:
           command: schema
