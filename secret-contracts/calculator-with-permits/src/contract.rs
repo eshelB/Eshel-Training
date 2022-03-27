@@ -247,10 +247,10 @@ mod tests {
     }
 
     #[test]
-    fn bad_permit() {
+    fn bad_permit() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         // invalid permit: the given signature signed chain_id="secret-4"
         let bad_permit = r#"{
@@ -284,6 +284,8 @@ mod tests {
                 "Failed to verify signatures for the given permit: IncorrectSignature",
             ))
         );
+
+        Ok(())
     }
 
     const PERMIT: &str = r#"{
@@ -303,10 +305,10 @@ mod tests {
     }"#;
 
     #[test]
-    fn add() {
+    fn add() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         // initial calculation history for an account should be unexistent
         let msg = QueryMsg::WithPermit {
@@ -317,7 +319,7 @@ mod tests {
             },
         };
 
-        let raw_res = query(&mut deps, msg).unwrap();
+        let raw_res = query(&mut deps, msg)?;
 
         let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
         let deserialized_result: QueryAnswer =
@@ -346,7 +348,7 @@ mod tests {
             },
         };
 
-        let raw_res = query(&mut deps, msg).unwrap();
+        let raw_res = query(&mut deps, msg)?;
         let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
         let deserialized_result: QueryAnswer =
             serde_json::from_str(response_string.as_str()).unwrap();
@@ -363,13 +365,15 @@ mod tests {
                 total: Some(Uint128(1)),
             }
         );
+
+        Ok(())
     }
 
     #[test]
-    fn sub_underflow() {
+    fn sub_underflow() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         let msg = HandleMsg::Sub(BinaryOp(Uint128(23), Uint128(113)));
 
@@ -378,14 +382,16 @@ mod tests {
         assert_eq!(
             res,
             Err(StdError::generic_err("Underflow in Sub operation"))
-        )
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn sub() {
+    fn sub() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         let msg = HandleMsg::Sub(BinaryOp(Uint128(123), Uint128(13)));
 
@@ -402,7 +408,7 @@ mod tests {
             },
         };
 
-        let raw_res = query(&mut deps, msg).unwrap();
+        let raw_res = query(&mut deps, msg)?;
         let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
         let deserialized_result: QueryAnswer =
             serde_json::from_str(response_string.as_str()).unwrap();
@@ -419,13 +425,15 @@ mod tests {
                 total: Some(Uint128(1)),
             }
         );
+
+        Ok(())
     }
 
     #[test]
-    fn mul() {
+    fn mul() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         let msg = HandleMsg::Mul(BinaryOp(Uint128(23), Uint128(50)));
 
@@ -442,7 +450,7 @@ mod tests {
             },
         };
 
-        let raw_res = query(&mut deps, msg).unwrap();
+        let raw_res = query(&mut deps, msg)?;
         let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
         let deserialized_result: QueryAnswer =
             serde_json::from_str(response_string.as_str()).unwrap();
@@ -459,13 +467,15 @@ mod tests {
                 total: Some(Uint128(1)),
             }
         );
+
+        Ok(())
     }
 
     #[test]
-    fn div() {
+    fn div() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         let msg = HandleMsg::Div(BinaryOp(Uint128(23), Uint128(50)));
 
@@ -482,7 +492,7 @@ mod tests {
             },
         };
 
-        let raw_res = query(&mut deps, msg).unwrap();
+        let raw_res = query(&mut deps, msg)?;
         let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
         let deserialized_result: QueryAnswer =
             serde_json::from_str(response_string.as_str()).unwrap();
@@ -499,13 +509,15 @@ mod tests {
                 total: Some(Uint128(1)),
             }
         );
+
+        Ok(())
     }
 
     #[test]
-    fn div_by_zero() {
+    fn div_by_zero() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         let msg = HandleMsg::Div(BinaryOp(Uint128(23), Uint128(0)));
 
@@ -516,14 +528,16 @@ mod tests {
             res,
             Err(StdError::generic_err("Divisor can't be zero")),
             "failed raising error for divisio by zero"
-        )
+        );
+
+        Ok(())
     }
 
     #[test]
-    fn sqrt() {
+    fn sqrt() -> Result<(), StdError> {
         let mut deps = my_mock_dependencies(&coins(2, "token"));
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
-        init(&mut deps, env, InitMsg {}).unwrap();
+        init(&mut deps, env, InitMsg {})?;
 
         let msg = HandleMsg::Sqrt(UnaryOp(Uint128(17)));
 
@@ -540,7 +554,7 @@ mod tests {
             },
         };
 
-        let raw_res = query(&mut deps, msg).unwrap();
+        let raw_res = query(&mut deps, msg)?;
         let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
         let deserialized_result: QueryAnswer =
             serde_json::from_str(response_string.as_str()).unwrap();
@@ -557,5 +571,6 @@ mod tests {
                 total: Some(Uint128(1)),
             }
         );
+        Ok(())
     }
 }
