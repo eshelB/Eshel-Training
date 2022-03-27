@@ -2,7 +2,6 @@ on: [push, pull_request]
 
 name: Basic
 
-
 jobs:
   test:
     name: Test Suite
@@ -48,6 +47,9 @@ jobs:
   lints:
     name: Lints
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./secret-contracts/calculator-with-permits
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
