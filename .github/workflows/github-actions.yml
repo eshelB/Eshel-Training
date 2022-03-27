@@ -19,29 +19,26 @@ jobs:
           override: true
 
       - name: Run unit tests
-        working-directory: ./secret-contracts/calculator-with-permits
         uses: actions-rs/cargo@v1
         with:
           command: unit-test
-          args: --locked
+          args: --locked --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
         env:
           RUST_BACKTRACE: 1
 
       - name: Compile WASM contract
-        working-directory: ./secret-contracts/calculator-with-permits
         uses: actions-rs/cargo@v1
         with:
           command: wasm
-          args: --locked
+          args: --locked --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
         env:
           RUSTFLAGS: "-C link-arg=-s"
 
       - name: Run integration tests
-        working-directory: ./secret-contracts/calculator-with-permits
         uses: actions-rs/cargo@v1
         with:
           command: integration-test
-          args: --locked
+          args: --locked --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
 
 
   lints:
@@ -52,7 +49,6 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install stable toolchain
-        working-directory: ./secret-contracts/calculator-with-permits
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -61,24 +57,22 @@ jobs:
           components: rustfmt, clippy
 
       - name: Run cargo fmt
-        working-directory: ./secret-contracts/calculator-with-permits
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --all -- --check --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
 
       - name: Run cargo clippy
-        working-directory: ./secret-contracts/calculator-with-permits
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: -- -D warnings --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
 
       # TODO: we should check
       # CHANGES_IN_REPO=$(git status --porcelain)
       # after this, but I don't know how
       - name: Generate Schema
-        working-directory: ./secret-contracts/calculator-with-permits
         uses: actions-rs/cargo@v1
         with:
           command: schema
+          args: --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
