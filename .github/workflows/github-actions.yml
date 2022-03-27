@@ -2,14 +2,14 @@ on: [push, pull_request]
 
 name: Basic
 
-defaults:
-  run:
-    working-directory: ./secret-contracts/calculator-with-permits
 
 jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./secret-contracts/calculator-with-permits
     steps:
       - name: Checkout sources
         uses: actions/checkout@v2
