@@ -139,6 +139,11 @@ fn div<S: Storage, A: Api, Q: Querier>(
     calculation: BinaryOp,
 ) -> StdResult<HandleAnswer> {
     let (left_operand, right_operand) = (calculation.0, calculation.1);
+
+    if right_operand == Uint128::zero() {
+        return Err(StdError::generic_err(format!("Divisor can't be zero")));
+    }
+
     let result = Uint128::from(
         left_operand
             .u128()
@@ -532,6 +537,24 @@ mod tests {
             }
             StdResult::Err(_e) => assert!(false),
         }
+    }
+
+    #[test]
+    fn div_by_zero() {
+        let mut deps = my_mock_dependencies(&coins(2, "token"));
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+        init(&mut deps, env, InitMsg {}).unwrap();
+
+        let msg = HandleMsg::Div(BinaryOp(Uint128(23), Uint128(0)));
+
+        let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
+
+        let res = handle(&mut deps, env, msg);
+        assert_eq!(
+            res,
+            Err(StdError::generic_err("Divisor can't be zero")),
+            "failed raising error for divisio by zero"
+        )
     }
 
     #[test]

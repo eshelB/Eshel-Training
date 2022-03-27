@@ -405,6 +405,33 @@ function test_div() {
     assert_eq "$div_response" "$expected_response"
 }
 
+function test_div_by_zero() {
+    set -e
+    local contract_addr="$1"
+
+    log_test_header
+
+    local key="a"
+    local tx_hash
+
+    log "dividing..."
+    local div_message='{"div": ["23", "0"]}'
+
+    tx_hash="$(compute_execute "$contract_addr" "$div_message" "--from" "$key" --gas "150000" "-y")"
+    echo "$tx_hash"
+
+    local div_response
+    # Notice the `!` before the command - it is EXPECTED to fail.
+    ! div_response="$(wait_for_compute_tx "$tx_hash" "waiting division by zero result")"
+    local div_error
+    div_error="$(get_generic_err "$div_response")"
+
+    log "$div_error"
+
+    local expected_error="Divisor can't be zero"
+    assert_eq "$div_error" "$expected_error"
+}
+
 function test_sqrt() {
     set -e
     local contract_addr="$1"
@@ -428,6 +455,28 @@ function test_sqrt() {
     assert_eq "$sqrt_response" "$expected_response"
 }
 
+function test_sqrt_negative() {
+    set -e
+    local contract_addr="$1"
+
+    log_test_header
+
+    local key="a"
+    local tx_hash
+
+    log "calculating square root..."
+    local sqrt_message='{"sqrt": "-23"}'
+    tx_hash="$(compute_execute "$contract_addr" "$sqrt_message" "--from" "$key" --gas "150000" "-y")"
+    echo "$tx_hash"
+
+    local sqrt_response
+    sqrt_response="$(data_of wait_for_compute_tx "$tx_hash" "waiting for sqrt from \"$key\" to process")"
+    log "$sqrt_response"
+
+    local expected_error='"Error: Negative operand"'
+    assert_eq "$sqrt_response" "$expected_error"
+}
+
 function main() {
     log '              <####> Starting integration tests <####>'
     log "secretcli version in the docker image is: $(secretcli version)"
@@ -441,7 +490,9 @@ function main() {
     test_sub "$contract_addr"
     test_mul "$contract_addr"
     test_div "$contract_addr"
+    test_div_by_zero "$contract_addr"
     test_sqrt "$contract_addr"
+    test_sqrt_negative "$contract_addr"
     test_query_with_permit_after "$contract_addr"
 
     log 'Tests completed successfully'
