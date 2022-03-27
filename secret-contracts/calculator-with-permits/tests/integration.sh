@@ -455,28 +455,6 @@ function test_sqrt() {
     assert_eq "$sqrt_response" "$expected_response"
 }
 
-function test_sqrt_negative() {
-    set -e
-    local contract_addr="$1"
-
-    log_test_header
-
-    local key="a"
-    local tx_hash
-
-    log "calculating square root..."
-    local sqrt_message='{"sqrt": "-23"}'
-    tx_hash="$(compute_execute "$contract_addr" "$sqrt_message" "--from" "$key" --gas "150000" "-y")"
-    echo "$tx_hash"
-
-    local sqrt_response
-    sqrt_response="$(data_of wait_for_compute_tx "$tx_hash" "waiting for sqrt from \"$key\" to process")"
-    log "$sqrt_response"
-
-    local expected_error='"Error: Negative operand"'
-    assert_eq "$sqrt_response" "$expected_error"
-}
-
 function main() {
     log '              <####> Starting integration tests <####>'
     log "secretcli version in the docker image is: $(secretcli version)"
@@ -492,7 +470,6 @@ function main() {
     test_div "$contract_addr"
     test_div_by_zero "$contract_addr"
     test_sqrt "$contract_addr"
-    test_sqrt_negative "$contract_addr"
     test_query_with_permit_after "$contract_addr"
 
     log 'Tests completed successfully'
