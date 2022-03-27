@@ -278,17 +278,12 @@ mod tests {
         };
 
         let res = query(&mut deps, msg);
-        match res {
-            StdResult::Ok(_res) => assert!(false),
-            StdResult::Err(e) => {
-                assert_eq!(
-                    e,
-                    StdError::generic_err(
-                        "Failed to verify signatures for the given permit: IncorrectSignature",
-                    )
-                );
-            }
-        }
+        assert_eq!(
+            res,
+            Err(StdError::generic_err(
+                "Failed to verify signatures for the given permit: IncorrectSignature",
+            ))
+        );
     }
 
     const PERMIT: &str = r#"{
@@ -322,26 +317,19 @@ mod tests {
             },
         };
 
-        let res = query(&mut deps, msg);
-        match res {
-            StdResult::Ok(raw_res) => {
-                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer =
-                    serde_json::from_str(response_string.as_str()).unwrap();
-                println!("the result is: {:?}", deserialized_result);
-                assert_eq!(
-                    deserialized_result,
-                    QueryAnswer::CalculationHistory {
-                        calcs: vec![],
-                        total: Some(Uint128::zero()),
-                    }
-                );
+        let raw_res = query(&mut deps, msg).unwrap();
+
+        let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+        let deserialized_result: QueryAnswer =
+            serde_json::from_str(response_string.as_str()).unwrap();
+        println!("the result is: {:?}", deserialized_result);
+        assert_eq!(
+            deserialized_result,
+            QueryAnswer::CalculationHistory {
+                calcs: vec![],
+                total: Some(Uint128::zero()),
             }
-            StdResult::Err(e) => {
-                println!("{:?}", e);
-                assert!(false)
-            }
-        }
+        );
 
         let msg = HandleMsg::Add(BinaryOp(Uint128(12), Uint128(30)));
 
@@ -358,28 +346,23 @@ mod tests {
             },
         };
 
-        let res = query(&mut deps, msg);
-        match res {
-            StdResult::Ok(raw_res) => {
-                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer =
-                    serde_json::from_str(response_string.as_str()).unwrap();
-                println!("the result is: {:?}", deserialized_result);
-                assert_eq!(
-                    deserialized_result,
-                    QueryAnswer::CalculationHistory {
-                        calcs: vec![StoredCalculation {
-                            left_operand: Uint128(12),
-                            right_operand: Some(Uint128(30)),
-                            operation: "Add".to_string(),
-                            result: Uint128(42)
-                        }],
-                        total: Some(Uint128(1)),
-                    }
-                );
+        let raw_res = query(&mut deps, msg).unwrap();
+        let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+        let deserialized_result: QueryAnswer =
+            serde_json::from_str(response_string.as_str()).unwrap();
+        println!("the result is: {:?}", deserialized_result);
+        assert_eq!(
+            deserialized_result,
+            QueryAnswer::CalculationHistory {
+                calcs: vec![StoredCalculation {
+                    left_operand: Uint128(12),
+                    right_operand: Some(Uint128(30)),
+                    operation: "Add".to_string(),
+                    result: Uint128(42)
+                }],
+                total: Some(Uint128(1)),
             }
-            StdResult::Err(_e) => assert!(false),
-        }
+        );
     }
 
     #[test]
@@ -392,13 +375,10 @@ mod tests {
 
         let env = mock_env("qcYLPHTmmt6mhJpcp3UN", &coins(2, "token"));
         let res = handle(&mut deps, env, msg);
-        match res {
-            Err(e) => {
-                println!("{:?}", e);
-                assert_eq!(e, StdError::generic_err("Underflow in Sub operation"))
-            }
-            _ => assert!(false),
-        };
+        assert_eq!(
+            res,
+            Err(StdError::generic_err("Underflow in Sub operation"))
+        )
     }
 
     #[test]
@@ -422,28 +402,23 @@ mod tests {
             },
         };
 
-        let res = query(&mut deps, msg);
-        match res {
-            StdResult::Ok(raw_res) => {
-                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer =
-                    serde_json::from_str(response_string.as_str()).unwrap();
-                println!("the result is: {:?}", deserialized_result);
-                assert_eq!(
-                    deserialized_result,
-                    QueryAnswer::CalculationHistory {
-                        calcs: vec![StoredCalculation {
-                            left_operand: Uint128(123),
-                            right_operand: Some(Uint128(13)),
-                            operation: "Sub".to_string(),
-                            result: Uint128(110)
-                        }],
-                        total: Some(Uint128(1)),
-                    }
-                );
+        let raw_res = query(&mut deps, msg).unwrap();
+        let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+        let deserialized_result: QueryAnswer =
+            serde_json::from_str(response_string.as_str()).unwrap();
+        println!("the result is: {:?}", deserialized_result);
+        assert_eq!(
+            deserialized_result,
+            QueryAnswer::CalculationHistory {
+                calcs: vec![StoredCalculation {
+                    left_operand: Uint128(123),
+                    right_operand: Some(Uint128(13)),
+                    operation: "Sub".to_string(),
+                    result: Uint128(110)
+                }],
+                total: Some(Uint128(1)),
             }
-            StdResult::Err(_e) => assert!(false),
-        }
+        );
     }
 
     #[test]
@@ -467,31 +442,23 @@ mod tests {
             },
         };
 
-        let res = query(&mut deps, msg);
-        match res {
-            StdResult::Ok(raw_res) => {
-                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer =
-                    serde_json::from_str(response_string.as_str()).unwrap();
-                println!("the result is: {:?}", deserialized_result);
-                assert_eq!(
-                    deserialized_result,
-                    QueryAnswer::CalculationHistory {
-                        calcs: vec![StoredCalculation {
-                            left_operand: Uint128(23),
-                            right_operand: Some(Uint128(50)),
-                            operation: "Mul".to_string(),
-                            result: Uint128(1150)
-                        }],
-                        total: Some(Uint128(1)),
-                    }
-                );
+        let raw_res = query(&mut deps, msg).unwrap();
+        let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+        let deserialized_result: QueryAnswer =
+            serde_json::from_str(response_string.as_str()).unwrap();
+        println!("the result is: {:?}", deserialized_result);
+        assert_eq!(
+            deserialized_result,
+            QueryAnswer::CalculationHistory {
+                calcs: vec![StoredCalculation {
+                    left_operand: Uint128(23),
+                    right_operand: Some(Uint128(50)),
+                    operation: "Mul".to_string(),
+                    result: Uint128(1150)
+                }],
+                total: Some(Uint128(1)),
             }
-            StdResult::Err(e) => {
-                println!("{:?}", e);
-                assert!(false)
-            }
-        }
+        );
     }
 
     #[test]
@@ -515,28 +482,23 @@ mod tests {
             },
         };
 
-        let res = query(&mut deps, msg);
-        match res {
-            StdResult::Ok(raw_res) => {
-                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer =
-                    serde_json::from_str(response_string.as_str()).unwrap();
-                println!("the result is: {:?}", deserialized_result);
-                assert_eq!(
-                    deserialized_result,
-                    QueryAnswer::CalculationHistory {
-                        calcs: vec![StoredCalculation {
-                            left_operand: Uint128(23),
-                            right_operand: Some(Uint128(50)),
-                            operation: "Div".to_string(),
-                            result: Uint128(0)
-                        }],
-                        total: Some(Uint128(1)),
-                    }
-                );
+        let raw_res = query(&mut deps, msg).unwrap();
+        let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+        let deserialized_result: QueryAnswer =
+            serde_json::from_str(response_string.as_str()).unwrap();
+        println!("the result is: {:?}", deserialized_result);
+        assert_eq!(
+            deserialized_result,
+            QueryAnswer::CalculationHistory {
+                calcs: vec![StoredCalculation {
+                    left_operand: Uint128(23),
+                    right_operand: Some(Uint128(50)),
+                    operation: "Div".to_string(),
+                    result: Uint128(0)
+                }],
+                total: Some(Uint128(1)),
             }
-            StdResult::Err(_e) => assert!(false),
-        }
+        );
     }
 
     #[test]
@@ -578,27 +540,22 @@ mod tests {
             },
         };
 
-        let res = query(&mut deps, msg);
-        match res {
-            StdResult::Ok(raw_res) => {
-                let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
-                let deserialized_result: QueryAnswer =
-                    serde_json::from_str(response_string.as_str()).unwrap();
-                println!("the result is: {:?}", deserialized_result);
-                assert_eq!(
-                    deserialized_result,
-                    QueryAnswer::CalculationHistory {
-                        calcs: vec![StoredCalculation {
-                            left_operand: Uint128(17),
-                            right_operand: None,
-                            operation: "Sqrt".to_string(),
-                            result: Uint128(4)
-                        }],
-                        total: Some(Uint128(1)),
-                    }
-                );
+        let raw_res = query(&mut deps, msg).unwrap();
+        let response_string = String::from_utf8(raw_res.clone().into()).unwrap();
+        let deserialized_result: QueryAnswer =
+            serde_json::from_str(response_string.as_str()).unwrap();
+        println!("the result is: {:?}", deserialized_result);
+        assert_eq!(
+            deserialized_result,
+            QueryAnswer::CalculationHistory {
+                calcs: vec![StoredCalculation {
+                    left_operand: Uint128(17),
+                    right_operand: None,
+                    operation: "Sqrt".to_string(),
+                    result: Uint128(4)
+                }],
+                total: Some(Uint128(1)),
             }
-            StdResult::Err(_e) => assert!(false),
-        }
+        );
     }
 }
