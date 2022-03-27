@@ -230,11 +230,11 @@ function test_query_with_permit_after() {
     local permit
     local permit_query
     local expected_output
-    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_contracts":["'"$contract_addr"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
+    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
     expected_output='{"calculation_history":{"calcs":[{"left_operand":"23","right_operand":null,"operation":"Sqrt","result":"4"},{"left_operand":"23","right_operand":"3","operation":"Div","result":"7"},{"left_operand":"23","right_operand":"3","operation":"Mul","result":"69"}],"total":"5"}}'
 
     permit=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '"$permit"') --from '$key'")
-    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_contracts":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$permit"'}}}'
+    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$permit"'}}}'
     result="$(compute_query "$contract_addr" "$permit_query" 2>&1 || true )"
     result_comparable=$(echo $result | sed 's/ Usage:.*//')
 
@@ -263,12 +263,12 @@ function test_permit() {
     local wrong_contract
     wrong_contract=$(secretcli keys show -a banana)
 
-    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_contracts":["'"$wrong_contract"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
-    expected_error="Error: query result: encrypted: Permit doesn't apply to contract \"$contract_addr\", allowed contract: [\"$wrong_contract\"] "
+    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_tokens":["'"$wrong_contract"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
+    expected_error="Error: query result: encrypted: Permit doesn't apply to token \"$contract_addr\", allowed tokens: [\"$wrong_contract\"] "
 
     key=a
     sig=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '$permit') --from '$key'")
-    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_contracts":["'"$wrong_contract"'"],"permissions":["calculation_history"]},"signature":'"$sig"'}}}'
+    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_tokens":["'"$wrong_contract"'"],"permissions":["calculation_history"]},"signature":'"$sig"'}}}'
     result="$(compute_query "$contract_addr" "$permit_query" 2>&1 || true )"
     result_comparable=$(echo $result | sed 's/Usage:.*//')
 
@@ -276,11 +276,11 @@ function test_permit() {
     log "no contract in permit: ASSERTION_SUCCESS"
 
     # fail query due to incorrect permissions in permit
-    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_contracts":["'"$contract_addr"'"],"permissions":["no_permissions"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
+    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_tokens":["'"$contract_addr"'"],"permissions":["no_permissions"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
     expected_error='Error: query result: parsing calculator::msg::QueryMsg: unknown variant `no_permissions`, expected `calculation_history`'
 
     permit=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '$permit') --from '$key'")
-    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_contracts":["'"$contract_addr"'"],"permissions":["no_permissions"]},"signature":'"$permit"'}}}'
+    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_tokens":["'"$contract_addr"'"],"permissions":["no_permissions"]},"signature":'"$permit"'}}}'
     result="$(compute_query "$contract_addr" "$permit_query" 2>&1 || true )"
     result_comparable=$(echo $result | sed 's/ Usage:.*//')
 
@@ -288,11 +288,11 @@ function test_permit() {
     log "no permissions in permit: ASSERTION_SUCCESS"
 
     # fail query due to mismatching signature
-    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_contracts":["'"$contract_addr"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
+    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
     expected_error='Error: query result: encrypted: Failed to verify signatures for the given permit: IncorrectSignature'
 
     permit=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '$permit') --from '$key'")
-    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test-2","chain_id":"blabla","allowed_contracts":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$permit"'}}}'
+    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test-2","chain_id":"blabla","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$permit"'}}}'
     result="$(compute_query "$contract_addr" "$permit_query" 2>&1 || true )"
     result_comparable=$(echo $result | sed 's/ Usage:.*//')
 
@@ -300,11 +300,11 @@ function test_permit() {
     log "incorrect signature: ASSERTION_SUCCESS"
 
     # permit query success
-    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_contracts":["'"$contract_addr"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
+    permit='{"account_number":"0","sequence":"0","chain_id":"blabla","msgs":[{"type":"query_permit","value":{"permit_name":"test","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]}}],"fee":{"amount":[{"denom":"uscrt","amount":"0"}],"gas":"1"},"memo":""}'
     expected_output='{"calculation_history":{"calcs":[],"total":"0"}}'
 
     permit=$(docker exec secretdev bash -c "/usr/bin/secretd tx sign-doc <(echo '$permit') --from '$key'")
-    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_contracts":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$permit"'}}}'
+    permit_query='{"with_permit":{"query":{"calculation_history":{"page_size":"3"}},"permit":{"params":{"permit_name":"test","chain_id":"blabla","allowed_tokens":["'"$contract_addr"'"],"permissions":["calculation_history"]},"signature":'"$permit"'}}}'
     result="$(compute_query "$contract_addr" "$permit_query" 2>&1 || true )"
     result_comparable=$(echo $result | sed 's/ Usage:.*//')
 
