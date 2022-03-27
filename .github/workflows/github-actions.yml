@@ -4,7 +4,7 @@ name: Basic
 
 defaults:
   run:
-    working-directory: ./secret_contracts/calculator-with-permits
+    working-directory: ./secret-contracts/calculator-with-permits
 
 jobs:
   test:
