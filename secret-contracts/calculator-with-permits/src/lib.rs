@@ -1,6 +1,5 @@
 pub mod contract;
 pub mod msg;
-mod permit;
 pub mod state;
 mod test_utils;
 

@@ -3,11 +3,12 @@ use cosmwasm_std::{
     InitResponse, InitResult, Querier, QueryResult, StdError, StdResult, Storage, Uint128,
 };
 use integer_sqrt::IntegerSquareRoot;
+use secret_toolkit::permit::{validate, Permit};
 
 use crate::msg::{
-    BinaryOp, HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg, QueryWithPermit, UnaryOp,
+    BinaryOp, CalculatorPermission, HandleAnswer, HandleMsg, InitMsg, QueryAnswer, QueryMsg,
+    QueryWithPermit, UnaryOp,
 };
-use crate::permit::{validate, Permission, Permit};
 use crate::state::{
     append_calculation, get_calculations, get_constants, set_constants, Constants,
     StoredCalculation,
@@ -194,16 +195,16 @@ pub fn query<S: Storage, A: Api, Q: Querier>(deps: &Extern<S, A, Q>, msg: QueryM
 
 fn permit_queries<S: Storage, A: Api, Q: Querier>(
     deps: &Extern<S, A, Q>,
-    permit: Permit,
+    permit: Permit<CalculatorPermission>,
     query: QueryWithPermit,
 ) -> QueryResult {
     let contract_address = get_constants(&deps.storage)?.contract_address;
 
-    let account = validate(deps, "revoked_permits", &permit, contract_address)?;
+    let account = validate(deps, "revoked_permits", &permit, &contract_address)?;
 
     match query {
         QueryWithPermit::CalculationHistory { page, page_size } => {
-            if !permit.check_permission(&Permission::CalculationHistory) {
+            if !permit.check_permission(&CalculatorPermission::CalculationHistory) {
                 return Err(StdError::generic_err(format!(
                     "No permission to query history, got permissions {:?}",
                     permit.params.permissions
@@ -256,7 +257,7 @@ mod tests {
         let bad_permit = r#"{
             "params": {
                 "permit_name":"test",
-                "allowed_contracts": ["cosmos2contract"],
+                "allowed_tokens": ["cosmos2contract"],
                 "chain_id": "secret-5",
                 "permissions": ["calculation_history"]
             },
@@ -291,7 +292,7 @@ mod tests {
     const PERMIT: &str = r#"{
         "params": {
             "permit_name":"test",
-            "allowed_contracts": ["cosmos2contract"],
+            "allowed_tokens": ["cosmos2contract"],
             "chain_id": "secret-4",
             "permissions": ["calculation_history"]
         },
@@ -300,7 +301,7 @@ mod tests {
                 "type": "tendermint/PubKeySecp256k1",
                 "value":"A31nYb+/VgwXsjhgmdkRotRexaDmgblDlhQja/rtEKwW"
             },
-            "signature":"QTVNw3CjT0wTRsPiWHpgZrP7lsDyzWFUv0qNLnhmptdRh0Kn40bGnmxqNapFQR4Iddd2B4kF1Vjyx1DM96sP+g=="
+            "signature":"3FGAy2Sdjtcw8uLFBfYPoVNQ0FeNxhYPG7aXa9NkY+xC1RN5Yo8EIrPu523MrNfvCa5W/4Ni6Cv+3lvEw9dBfA=="
         }
     }"#;
 

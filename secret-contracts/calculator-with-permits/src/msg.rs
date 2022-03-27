@@ -2,8 +2,8 @@ use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::permit::Permit;
 use crate::state::StoredCalculation;
+use secret_toolkit::permit::Permit;
 
 #[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // nothing to initialize in this contract
@@ -27,11 +27,17 @@ pub struct UnaryOp(pub Uint128);
 #[serde(rename_all = "snake_case")]
 pub struct BinaryOp(pub Uint128, pub Uint128);
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum CalculatorPermission {
+    CalculationHistory,
+}
+
 #[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     WithPermit {
-        permit: Permit,
+        permit: Permit<CalculatorPermission>,
         query: QueryWithPermit,
     },
 }
