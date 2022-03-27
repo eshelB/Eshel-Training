@@ -43,7 +43,7 @@ pub fn append_calculation<S: Storage>(
     for_address: &HumanAddr,
 ) -> StdResult<()> {
     let mut store = PrefixedStorage::multilevel(
-        &[PREFIX_CALCULATIONS, &for_address.as_str().as_bytes()],
+        &[PREFIX_CALCULATIONS, for_address.as_str().as_bytes()],
         store,
     );
     let mut store = AppendStoreMut::attach_or_create(&mut store)?;
@@ -57,7 +57,7 @@ pub fn get_calculations<S: ReadonlyStorage>(
     page_size: Uint128,
 ) -> StdResult<(Vec<StoredCalculation>, Uint128)> {
     let store = ReadonlyPrefixedStorage::multilevel(
-        &[PREFIX_CALCULATIONS, &for_address.as_str().as_bytes()],
+        &[PREFIX_CALCULATIONS, for_address.as_str().as_bytes()],
         storage,
     );
 

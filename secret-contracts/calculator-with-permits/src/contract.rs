@@ -66,7 +66,7 @@ fn add<S: Storage, A: Api, Q: Querier>(
         left_operand
             .u128()
             .checked_add(right_operand.u128())
-            .ok_or_else(|| StdError::generic_err(format!("Overflow in Add operation")))?,
+            .ok_or_else(|| StdError::generic_err("Overflow in Add operation"))?,
     );
 
     let calculation = StoredCalculation {
@@ -92,7 +92,7 @@ fn sub<S: Storage, A: Api, Q: Querier>(
         left_operand
             .u128()
             .checked_sub(right_operand.u128())
-            .ok_or_else(|| StdError::generic_err(format!("Underflow in Sub operation")))?,
+            .ok_or_else(|| StdError::generic_err("Underflow in Sub operation"))?,
     );
 
     let calculation = StoredCalculation {
@@ -118,14 +118,14 @@ fn mul<S: Storage, A: Api, Q: Querier>(
         left_operand
             .u128()
             .checked_mul(right_operand.u128())
-            .ok_or_else(|| StdError::generic_err(format!("Overflow in Mul operation")))?,
+            .ok_or_else(|| StdError::generic_err("Overflow in Mul operation".to_string()))?,
     );
 
     let calculation = StoredCalculation {
         left_operand,
         right_operand: Some(right_operand),
         operation: "Mul".to_string(),
-        result: Uint128::from(result),
+        result,
     };
 
     save_calculation(deps, calculation, env)?;
@@ -142,14 +142,14 @@ fn div<S: Storage, A: Api, Q: Querier>(
     let (left_operand, right_operand) = (calculation.0, calculation.1);
 
     if right_operand == Uint128::zero() {
-        return Err(StdError::generic_err(format!("Divisor can't be zero")));
+        return Err(StdError::generic_err("Divisor can't be zero".to_string()));
     }
 
     let result = Uint128::from(
         left_operand
             .u128()
             .checked_div(right_operand.u128())
-            .ok_or_else(|| StdError::generic_err(format!("Underflow in Div operation")))?,
+            .ok_or_else(|| StdError::generic_err("Underflow in Div operation".to_string()))?,
     );
 
     let calculation = StoredCalculation {
@@ -222,7 +222,7 @@ pub fn query_calculation_history<S: Storage, A: Api, Q: Querier>(
     page: Uint128,
     page_size: Uint128,
 ) -> StdResult<Binary> {
-    let (calcs, total) = get_calculations(&deps.storage, &account, page, page_size)?;
+    let (calcs, total) = get_calculations(&deps.storage, account, page, page_size)?;
 
     to_binary(&QueryAnswer::CalculationHistory {
         calcs,
