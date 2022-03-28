@@ -1,0 +1,11 @@
+
+testnet:
+
+[
+  {
+    "address": "secret1r7pgsc0h0y8dqesq27kfskv2k7chfq0quyk84a",
+    "code_id": 7644,
+    "creator": "secret148rqk0r5u6ddaf5ynfw2wagd7gyy95h2s9jlv4",
+    "label": "my calculator"
+  }
+]

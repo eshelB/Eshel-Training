@@ -9,15 +9,7 @@
       ],
       "properties": {
         "add": {
-          "type": "object",
-          "required": [
-            "calculation"
-          ],
-          "properties": {
-            "calculation": {
-              "$ref": "#/definitions/Calculation"
-            }
-          }
+          "$ref": "#/definitions/BinaryOp"
         }
       }
     },
@@ -28,15 +20,7 @@
       ],
       "properties": {
         "sub": {
-          "type": "object",
-          "required": [
-            "calculation"
-          ],
-          "properties": {
-            "calculation": {
-              "$ref": "#/definitions/Calculation"
-            }
-          }
+          "$ref": "#/definitions/BinaryOp"
         }
       }
     },
@@ -47,15 +31,7 @@
       ],
       "properties": {
         "mul": {
-          "type": "object",
-          "required": [
-            "calculation"
-          ],
-          "properties": {
-            "calculation": {
-              "$ref": "#/definitions/Calculation"
-            }
-          }
+          "$ref": "#/definitions/BinaryOp"
         }
       }
     },
@@ -66,15 +42,7 @@
       ],
       "properties": {
         "div": {
-          "type": "object",
-          "required": [
-            "calculation"
-          ],
-          "properties": {
-            "calculation": {
-              "$ref": "#/definitions/Calculation"
-            }
-          }
+          "$ref": "#/definitions/BinaryOp"
         }
       }
     },
@@ -85,68 +53,30 @@
       ],
       "properties": {
         "sqrt": {
-          "type": "object",
-          "required": [
-            "calculation"
-          ],
-          "properties": {
-            "calculation": {
-              "$ref": "#/definitions/Calculation"
-            }
-          }
+          "$ref": "#/definitions/UnaryOp"
         }
       }
     }
   ],
   "definitions": {
-    "Calculation": {
-      "anyOf": [
+    "BinaryOp": {
+      "type": "array",
+      "items": [
         {
-          "type": "object",
-          "required": [
-            "binary_calculation"
-          ],
-          "properties": {
-            "binary_calculation": {
-              "type": "object",
-              "required": [
-                "left_operand",
-                "right_operand"
-              ],
-              "properties": {
-                "left_operand": {
-                  "type": "integer",
-                  "format": "int64"
-                },
-                "right_operand": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            }
-          }
+          "$ref": "#/definitions/Uint128"
         },
         {
-          "type": "object",
-          "required": [
-            "unary_calculation"
-          ],
-          "properties": {
-            "unary_calculation": {
-              "type": "object",
-              "required": [
-                "operand"
-              ],
-              "properties": {
-                "operand": {
-                  "type": "integer",
-                  "format": "int64"
-                }
-              }
-            }
-          }
+          "$ref": "#/definitions/Uint128"
         }
-      ]
+      ],
+      "maxItems": 2,
+      "minItems": 2
+    },
+    "Uint128": {
+      "type": "string"
+    },
+    "UnaryOp": {
+      "$ref": "#/definitions/Uint128"
     }
   }
 }

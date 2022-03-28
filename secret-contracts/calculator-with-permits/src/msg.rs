@@ -1,36 +1,48 @@
+use cosmwasm_std::Uint128;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use cosmwasm_std::{Binary, Uint128};
+
 use crate::state::StoredCalculation;
-use crate::permit::Permit;
+use secret_toolkit::permit::Permit;
 
-pub type QueryResponse = Binary;
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 // nothing to initialize in this contract
-pub struct InitMsg { }
-pub struct InitAnswer { }
+pub struct InitMsg {}
+
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum HandleMsg {
+    Add(BinaryOp),
+    Sub(BinaryOp),
+    Mul(BinaryOp),
+    Div(BinaryOp),
+    Sqrt(UnaryOp),
+}
+
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct UnaryOp(pub Uint128);
+
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[serde(rename_all = "snake_case")]
+pub struct BinaryOp(pub Uint128, pub Uint128);
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum HandleMsg {
-    Add { calculation: Calculation },
-    Sub { calculation: Calculation },
-    Mul { calculation: Calculation },
-    Div { calculation: Calculation },
-    Sqrt { calculation: Calculation },
+pub enum CalculatorPermission {
+    CalculationHistory,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     WithPermit {
-        permit: Permit,
+        permit: Permit<CalculatorPermission>,
         query: QueryWithPermit,
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum QueryWithPermit {
     CalculationHistory {
@@ -39,34 +51,17 @@ pub enum QueryWithPermit {
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cfg_attr(test, derive(Deserialize))]
 #[serde(rename_all = "snake_case")]
 pub enum QueryAnswer {
     CalculationHistory {
         calcs: Vec<StoredCalculation>,
         total: Option<Uint128>,
-    }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-#[serde(rename_all = "snake_case")]
-pub enum Calculation {
-    BinaryCalculation {
-        left_operand: Uint128,
-        right_operand: Uint128,
-    },
-    UnaryCalculation {
-        operand: Uint128,
-        //todo maybe add padding
     },
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Clone, Debug, PartialEq, JsonSchema)]
+#[cfg_attr(test, derive(Deserialize))]
 #[serde(rename_all = "snake_case")]
-pub enum HandleAnswer {
-    AddAnswer { result: Uint128 },
-    SubAnswer { result: Uint128 },
-    MulAnswer { result: Uint128 },
-    DivAnswer { result: Uint128 },
-    SqrtAnswer { result: Uint128 },
-}
+pub struct HandleAnswer(pub Uint128);

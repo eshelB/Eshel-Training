@@ -1,0 +1,22 @@
+{
+    "chain_id": "secret-4",
+    "account_number": "0",
+    "sequence": "0",
+    "msgs": [
+        {
+            "type": "query_permit",
+            "value": {
+                "permit_name": "test",
+                "allowed_tokens": [
+                    "secret1r7pgsc0h0y8dqesq27kfskv2k7chfq0quyk84a"
+                ],
+                "permissions": ["calculation_history"]
+            }
+        }
+    ],
+    "fee": {
+        "amount": [ { "denom": "uscrt", "amount": "0" } ],
+        "gas": "1"
+    },
+    "memo": ""
+}

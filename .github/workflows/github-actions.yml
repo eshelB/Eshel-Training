@@ -1,5 +1,3 @@
-# Based on https://github.com/actions-rs/example/blob/master/.github/workflows/quickstart.yml
-
 on: [push, pull_request]
 
 name: Basic
@@ -16,7 +14,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.43.1
+          toolchain: 1.46.0
           target: wasm32-unknown-unknown
           override: true
 
@@ -24,7 +22,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: unit-test
-#          args: --locked
+          args: --locked --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
         env:
           RUST_BACKTRACE: 1
 
@@ -32,7 +30,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: wasm
-#          args: --locked
+          args: --locked --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
         env:
           RUSTFLAGS: "-C link-arg=-s"
 
@@ -40,7 +38,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: integration-test
-#          args: --locked
+          args: --locked --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
 
 
   lints:
@@ -54,7 +52,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
-          toolchain: 1.43.1
+          toolchain: 1.46.0
           override: true
           components: rustfmt, clippy
 
@@ -62,13 +60,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: fmt
-          args: --all -- --check
+          args: --all -- --check --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
 
       - name: Run cargo clippy
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: -- -D warnings
+          args: -- -D warnings --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
 
       # TODO: we should check
       # CHANGES_IN_REPO=$(git status --porcelain)
@@ -77,4 +75,4 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: schema
-#          args: --locked
+          args: --manifest-path ./secret-contracts/calculator-with-permits/Cargo.toml
