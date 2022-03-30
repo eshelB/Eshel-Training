@@ -1,6 +1,5 @@
 import React, { Component } from "react";
-import BasicMathContract from "./contracts/BasicMath.json";
-import getWeb3 from "./getWeb3";
+import { SecretNetworkClient } from "secretjs";
 
 import "./App.css";
 
@@ -34,30 +33,62 @@ class MathButton extends Component {
 }
 
 class App extends Component {
-  state = { firstOperand: 0, secondOperand: 0, result: 0, web3: null, accounts: null, contract: null };
+  state = { firstOperand: 0, secondOperand: 0, result: 0, web3: null, accounts: null, contract: null, secretjs: null };
 
   componentDidMount = async () => {
     try {
-      // Get network provider and web3 instance.
-      const web3 = await getWeb3();
+      console.log("attempting to connect to scrt-network via ", process.env.REACT_APP_GRPC_WEB_URL);
+      const secretjs = await SecretNetworkClient.create({
+        grpcWebUrl: process.env.REACT_APP_GRPC_WEB_URL,
+      });
+      console.log("created secret client");
 
-      // Use web3 to get the user's accounts.
-      const accounts = await web3.eth.getAccounts();
+      //todo playing around, remove later:
+      console.log("querying node for balance");
+      const {
+        balance: { amount },
+      } = await secretjs.query.bank.balance({
+        address: "secret1ap26qrlp8mcq2pg6r47w43l0y8zkqm8a450s03",
+        denom: "uscrt",
+      });
+      console.log("m8a450s03's balance is", amount, "uscrt");
+      const contractAddress = "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg";
 
-      // Get the contract instance.
-      const networkId = await web3.eth.net.getId();
-      const deployedNetwork = BasicMathContract.networks[networkId];
-      console.log("the address of the deployed contract is:", deployedNetwork && deployedNetwork.address);
-      const instance = new web3.eth.Contract(
-        BasicMathContract.abi,
-        deployedNetwork && deployedNetwork.address,
-      );
+      // Get codeHash using `secretcli q compute contract-hash secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg`
+      const contractHash =
+        "1a573176d7eab70777a86241c5ac29aa5093d2536a74a41723ed918167f46281";
+
+      console.log("querying contract");
+      const result = await secretjs.query.compute.queryContract({
+        address: contractAddress,
+        codeHash: contractHash, // optional but way faster
+        query: {
+          "with_permit": {
+            "query": { "calculation_history": { "page_size": "3" }},
+            "permit": {
+              "params": {
+                "permit_name": "test",
+                "allowed_tokens": ["secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"],
+                "chain_id": "secret-4",
+                "permissions": ["calculation_history"]
+              },
+              "signature": {
+                "pub_key": {"type": "tendermint/PubKeySecp256k1", "value": "A31nYb+/VgwXsjhgmdkRotRexaDmgblDlhQja/rtEKwW"},
+                "signature": "redacted"
+              }
+            }
+          }
+        },
+      });
+
+      console.log(result);
 
       document.title = "Secret Calculator"
 
-      this.setState({ web3, accounts, contract: instance });
+      // todo set correct state
+      this.setState({ web3: undefined, accounts: undefined, contract: undefined, result: amount, secretjs });
     } catch (error) {
-      alert(`Failed to load web3, accounts, or contract. Check console for details.`);
+      alert(`Failed to connect to secret network. Check console for details.`);
       console.error(error);
     }
   };
@@ -109,7 +140,7 @@ class App extends Component {
   };
 
   render() {
-    if (!this.state.web3) {
+    if (!this.state.secretjs) {
       return <div>Loading SecretJs, accounts, and contract...</div>;
     }
     return (
@@ -124,10 +155,10 @@ class App extends Component {
         <Input label="2" onchange={this.setters.setter2} value={this.state.secondOperand}/>
         <div className="flexbox-container">
           <MathButton label="+" onclick={this.functions.Add}/>
-          <MathButton label="-" onclick={this.functions.Sub}/>
+          <MathButton label="–" onclick={this.functions.Sub}/>
           <MathButton label="×" onclick={this.functions.Mul}/>
           <MathButton label="÷" onclick={this.functions.Div}/>
-          <MathButton label="√(1)" onclick={this.functions.Sqrt}/>
+          <MathButton label="√(operand 1)" onclick={this.functions.Sqrt}/>
         </div>
         <h2>
           result: {this.state.result}

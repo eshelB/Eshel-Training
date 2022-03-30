@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@truffle/hdwallet-provider": "^2.0.3",
+    "dotenv": "^16.0.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "3.2.0",
-    "web3": "^1.6.1"
+    "secretjs": "^1.2.0-beta.57"
   },
   "scripts": {
     "start": "react-scripts --openssl-legacy-provider start",
