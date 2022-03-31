@@ -34,3 +34,7 @@ input {
     margin: 4px;
     margin-top: 5px;
 }
+
+ul.b {
+    list-style-type: none;
+}
