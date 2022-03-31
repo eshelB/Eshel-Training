@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { SecretNetworkClient } from "secretjs";
+import { Wallet, SecretNetworkClient, MsgSend, MsgMultiSend } from "secretjs";
 
 import "./App.css";
 
@@ -38,20 +38,49 @@ class App extends Component {
   componentDidMount = async () => {
     try {
       console.log("attempting to connect to scrt-network via ", process.env.REACT_APP_GRPC_WEB_URL);
+
+      const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+      while (
+        !window.keplr ||
+        !window.getEnigmaUtils ||
+        !window.getOfflineSignerOnlyAmino
+      ) {
+        await sleep(100);
+      }
+
+      const CHAIN_ID = "secret-4";
+      await window.keplr.enable(CHAIN_ID);
+
+      const keplrOfflineSigner = window.getOfflineSignerOnlyAmino(CHAIN_ID);
+      // const [{ address: myAddress }] = await keplrOfflineSigner.getAccounts();
+      // console.log("my address is:", myAddress);
+
+      const wallet = new Wallet(
+        "grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar",
+      );
+      const myAddress = wallet.address;
+
+
       const secretjs = await SecretNetworkClient.create({
         grpcWebUrl: process.env.REACT_APP_GRPC_WEB_URL,
+        chainId: CHAIN_ID,
+        // wallet: keplrOfflineSigner, // NOTE: if I enable this wallet (either keplr or secretJS wallet), then the query on line 91 fails
+        wallet: wallet,
+        walletAddress: myAddress,
+        encryptionUtils: window.getEnigmaUtils(CHAIN_ID),
       });
+
       console.log("created secret client");
 
-      //todo playing around, remove later:
-      console.log("querying node for balance");
-      const {
-        balance: { amount },
-      } = await secretjs.query.bank.balance({
-        address: "secret1ap26qrlp8mcq2pg6r47w43l0y8zkqm8a450s03",
-        denom: "uscrt",
-      });
-      console.log("m8a450s03's balance is", amount, "uscrt");
+      // //todo playing around, remove later:
+      // console.log("querying node for balance");
+      // const {
+      //   balance: { amount },
+      // } = await secretjs.query.bank.balance({
+      //   address: "secret1ap26qrlp8mcq2pg6r47w43l0y8zkqm8a450s03",
+      //   denom: "uscrt",
+      // });
+      // console.log("m8a450s03's balance is", amount, "uscrt");
       const contractAddress = "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg";
 
       // Get codeHash using `secretcli q compute contract-hash secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg`
@@ -86,7 +115,7 @@ class App extends Component {
       document.title = "Secret Calculator"
 
       // todo set correct state
-      this.setState({ web3: undefined, accounts: undefined, contract: undefined, result: amount, secretjs });
+      this.setState({ web3: undefined, accounts: undefined, contract: undefined, result: "todo", secretjs });
     } catch (error) {
       alert(`Failed to connect to secret network. Check console for details.`);
       console.error(error);
@@ -141,7 +170,7 @@ class App extends Component {
 
   render() {
     if (!this.state.secretjs) {
-      return <div>Loading SecretJs, accounts, and contract...</div>;
+      return <div>Loading SecretJs, Keplr, and contract...</div>;
     }
     return (
       <div className="App">
