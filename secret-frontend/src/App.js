@@ -41,7 +41,7 @@ class History extends Component {
               },
               signature: {
                 pub_key: {type: "tendermint/PubKeySecp256k1", value: "A07oJJ9n4TYTnD7ZStYyiPbB3kXOZvqIMkchGmmPRAzf"},
-                signature: "redacted"
+                signature: "VsJH5a0qAwfxHihiPsehLCYmzq+69xrqDSYLKuiJPt06GKXt7jckdpHjdzhk8ChLoJpIqCHwWJOVgLQfeCQArg=="
               }
             }
           }
@@ -51,8 +51,8 @@ class History extends Component {
       console.log(result);
       this.setState({ calcs: result.calculation_history.calcs, total: parseInt(result.calculation_history.total) });
       console.log("state:", this.state);
-    } catch {
-      console.error("error loading history of calculations")
+    } catch (e){
+      console.error("error loading history of calculations", e)
     }
   }
 
