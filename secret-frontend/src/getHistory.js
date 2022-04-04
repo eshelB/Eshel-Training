@@ -4,19 +4,16 @@ const getHistory = async ({
   pageSize,
   signerAddress,
   cachedSignature,
-  chainId,
-  contractAddress,
-  contractHash,
 }) => {
   let signatureFinal = cachedSignature;
   try {
     if (!signatureFinal) {
       console.log("signing permit...");
       ({ signature: signatureFinal } = await window.keplr.signAmino(
-        chainId,
+        process.env.REACT_APP_CHAIN_ID,
         signerAddress,
         {
-          chain_id: chainId,
+          chain_id: process.env.REACT_APP_CHAIN_ID,
           account_number: "0", // Must be 0
           sequence: "0", // Must be 0
           fee: {
@@ -28,7 +25,7 @@ const getHistory = async ({
               type: "query_permit", // Must be "query_permit"
               value: {
                 permit_name: "test",
-                allowed_tokens: [contractAddress],
+                allowed_tokens: [process.env.REACT_APP_CONTRACT_ADDRESS],
                 permissions: ["calculation_history"],
               },
             },
@@ -45,8 +42,8 @@ const getHistory = async ({
     console.log("getting history on page", page, "with page size", pageSize);
 
     const result = await secretjs.query.compute.queryContract({
-      address: contractAddress,
-      codeHash: contractHash,
+      address: process.env.REACT_APP_CONTRACT_ADDRESS,
+      codeHash: process.env.REACT_APP_CONTRACT_HASH,
       query: {
         with_permit: {
           query: {
@@ -58,8 +55,8 @@ const getHistory = async ({
           permit: {
             params: {
               permit_name: "test",
-              allowed_tokens: [contractAddress],
-              chain_id: chainId,
+              allowed_tokens: [process.env.REACT_APP_CONTRACT_ADDRESS],
+              chain_id: process.env.REACT_APP_CHAIN_ID,
               permissions: ["calculation_history"]
             },
             signature: signatureFinal,
@@ -70,7 +67,7 @@ const getHistory = async ({
 
     console.log(result);
     return [result, signatureFinal];
-  } catch (e){
+  } catch (e) {
     console.error("error loading history of calculations", e)
   }
 }

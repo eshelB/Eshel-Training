@@ -7,8 +7,6 @@ import Input from "./components/Input";
 import History from "./components/History";
 import MathButton from "./components/MathButton";
 
-
-
 class App extends Component {
   state = {
     firstOperand: 0,
@@ -39,8 +37,9 @@ class App extends Component {
         await sleep(100);
       }
 
+      console.log("chain id", process.env.REACT_APP_CHAIN_ID);
       await window.keplr.experimentalSuggestChain({
-        chainId: CHAIN_ID,
+        chainId: process.env.REACT_APP_CHAIN_ID,
         chainName: "Local Secret Chain",
         rpc: "http://localhost:26657",
         rest: "http://localhost:1337",
@@ -85,21 +84,21 @@ class App extends Component {
 
       let keplrOfflineSigner;
       try {
-        await window.keplr.enable(CHAIN_ID);
-        keplrOfflineSigner = window.getOfflineSignerOnlyAmino(CHAIN_ID);
+        await window.keplr.enable(process.env.REACT_APP_CHAIN_ID);
+        keplrOfflineSigner = window.getOfflineSignerOnlyAmino(process.env.REACT_APP_CHAIN_ID);
       } catch (e) {
-        console.log("keplr is not configured to work with ", CHAIN_ID);
+        console.log("keplr is not configured to work with ", process.env.REACT_APP_CHAIN_ID);
       }
       const [{ address: myAddress }] = await keplrOfflineSigner.getAccounts();
       console.log("my address is:", myAddress);
 
       const secretjs = await SecretNetworkClient.create({
         grpcWebUrl: process.env.REACT_APP_GRPC_WEB_URL,
-        chainId: CHAIN_ID,
+        chainId: process.env.REACT_APP_CHAIN_ID,
         // wallet,
         wallet: keplrOfflineSigner,
         walletAddress: myAddress,
-        encryptionUtils: window.getEnigmaUtils(CHAIN_ID),
+        encryptionUtils: window.getEnigmaUtils(process.env.REACT_APP_CHAIN_ID),
       });
       console.log("created secret client");
 
@@ -130,9 +129,6 @@ class App extends Component {
         pageSize: this.state.pageSize,
         signerAddress: this.state.myAddress,
         cachedSignature: this.state.signature,
-        chainId: CHAIN_ID,
-        contractAddress: CONTRACT_ADDRESS,
-        contractHash: CONTRACT_HASH,
       });
 
       console.log("calculation history received:", history, "sig:", signature);
@@ -170,8 +166,8 @@ class App extends Component {
 
         const calculationMessage = new MsgExecuteContract({
           sender: this.state.myAddress,
-          contract: CONTRACT_ADDRESS,
-          codeHash: CONTRACT_HASH,
+          contract: process.env.REACT_APP_CONTRACT_ADDRESS,
+          codeHash: process.env.REACT_APP_CONTRACT_HASH,
           msg,
         });
 
