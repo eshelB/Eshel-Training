@@ -25,6 +25,7 @@ class App extends Component {
   };
 
   componentDidMount = async () => {
+    console.log("using chain id:", process.env.REACT_APP_CHAIN_ID);
     try {
       console.log("attempting to connect to scrt-network via ", process.env.REACT_APP_GRPC_WEB_URL);
 
@@ -37,12 +38,11 @@ class App extends Component {
         await sleep(100);
       }
 
-      console.log("chain id", process.env.REACT_APP_CHAIN_ID);
       await window.keplr.experimentalSuggestChain({
         chainId: process.env.REACT_APP_CHAIN_ID,
-        chainName: "Local Secret Chain",
-        rpc: "http://localhost:26657",
-        rest: "http://localhost:1337",
+        chainName: process.env.REACT_APP_CHAIN_ID,
+        rpc: process.env.REACT_APP_GRPC_WEB_URL,
+        rest: process.env.REACT_APP_GRPC_WEB_URL,
         bip44: {
           coinType: 529,
         },
