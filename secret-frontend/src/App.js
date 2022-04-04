@@ -137,7 +137,7 @@ class App extends Component {
         total: parseInt(history.calculation_history.total),
         historyLoading: false,
         signature,
-      })
+      });
     } catch (e) {
       console.error("error when while updating history:", e);
       this.setState({
@@ -145,13 +145,10 @@ class App extends Component {
         historyError: true,
       });
     }
-  }
+  };
 
   getOperation = (functionName) => {
     const result = async () => {
-
-      console.log("state:", this.state);
-
       let { firstOperand, secondOperand } = this.state;
       [ firstOperand, secondOperand ] = [ firstOperand.toString(), secondOperand.toString() ];
       console.log(`calling ${functionName} function with operands:`, firstOperand, secondOperand);
