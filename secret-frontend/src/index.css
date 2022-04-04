@@ -29,6 +29,17 @@ button {
     margin-top: 25px;
 }
 
+button.Pagination {
+    /*background-color: #4CAF50; !* Green *!*/
+    /*border: none;*/
+    /*color: white;*/
+    padding: 5px 3px;
+    text-align: center;
+    font-size: 16px;
+    margin: 4px;
+    margin-top: 25px;
+}
+
 input {
     text-align: center;
     margin: 4px;
@@ -37,4 +48,8 @@ input {
 
 ul.b {
     list-style-type: none;
+}
+
+div.b {
+    border: 1px solid #ccc;
 }

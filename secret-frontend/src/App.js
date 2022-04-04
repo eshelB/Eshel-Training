@@ -1,10 +1,20 @@
 import React, { Component } from "react";
-import {Wallet, SecretNetworkClient, MsgExecuteContract, EncryptionUtils, EncryptionUtilsImpl} from "secretjs";
+import {SecretNetworkClient, MsgExecuteContract} from "secretjs";
 
 import "./App.css";
+import {getHistory} from "./getHistory";
 
 const CONTRACT_ADDRESS = "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg";
 const CONTRACT_HASH = "1a573176d7eab70777a86241c5ac29aa5093d2536a74a41723ed918167f46281";
+const CHAIN_ID = "secretdev-1";
+// const CHAIN_ID = "pulsar-2";
+
+const arithmeticSigns = {
+  Add: "+",
+  Sub: "–",
+  Mul: "×",
+  Div: "÷"
+};
 
 class Input extends Component {
   render() {
@@ -13,7 +23,7 @@ class Input extends Component {
         <form>
           <label>
             operand {this.props.label}: &emsp;
-            <input type="number" name="numform" onChange={this.props.onchange} value={this.props.value}/>
+            <input type="number" min="0" name="numform" onChange={this.props.onchange} value={this.props.value}/>
           </label>
         </form>
       </div>
@@ -22,58 +32,46 @@ class Input extends Component {
 }
 
 class History extends Component {
-  state = { calcs: null, total: null };
-
-  componentDidMount = async () => {
-    try {
-      const result = await this.props.secretjs.query.compute.queryContract({
-        address: CONTRACT_ADDRESS,
-        codeHash: CONTRACT_HASH,
-        query: {
-          with_permit: {
-            query: {calculation_history: {page_size: "3"}},
-            permit: {
-              params: {
-                permit_name: "test",
-                allowed_tokens: ["secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"],
-                chain_id: "secret-4",
-                permissions: ["calculation_history"]
-              },
-              signature: {
-                pub_key: {type: "tendermint/PubKeySecp256k1", value: "A07oJJ9n4TYTnD7ZStYyiPbB3kXOZvqIMkchGmmPRAzf"},
-                signature: "VsJH5a0qAwfxHihiPsehLCYmzq+69xrqDSYLKuiJPt06GKXt7jckdpHjdzhk8ChLoJpIqCHwWJOVgLQfeCQArg=="
-              }
-            }
-          }
-        },
-      });
-
-      console.log(result);
-      this.setState({ calcs: result.calculation_history.calcs, total: parseInt(result.calculation_history.total) });
-      console.log("state:", this.state);
-    } catch (e){
-      console.error("error loading history of calculations", e)
-    }
-  }
-
   render() {
-    if (!this.state.calcs) {
+    if (this.props.history_loading) {
       return <div>Loading History...</div>;
     }
 
-    console.log("result from history component:", this.props.result);
-    const listItems = this.state.total ?
-      this.state.calcs.map(calculation => <li>{calculation}</li>) :
-      <li>No calculations for this address</li>;
+    if (this.props.history_error) {
+      return <div>Error Getting History</div>;
+    }
+
+    let listItems = []
+
+    if (this.props.total <= 0) {
+      listItems = [<div key="nocalc"> No Past Calculations </div>];
+    } else {
+      listItems = this.props.calcs.map((calculation, index) => {
+        if (calculation.operation === "Sqrt") {
+          return <div key={index}>
+            √( { calculation.left_operand } ) = { calculation.result }
+          </div>
+        }
+
+        return <div key={index}>
+            { calculation.left_operand } &nbsp;
+            { arithmeticSigns[calculation.operation] } &nbsp;
+            { calculation.right_operand } = { calculation.result }
+          </div>
+      });
+    }
+
+    const lowerIndex = Math.min(this.props.total, this.props.page * this.props.page_size + 1);
+    const upperIndex = Math.min(this.props.total, (this.props.page + 1) * this.props.page_size);
 
     return (
       <div className="History">
         <p>
-          History of calculations:
+          History of calculations (Showing {lowerIndex}-{upperIndex} out of {this.props.total}):
         </p>
-        <ul className="b">
+        <div className="b">
           {listItems}
-        </ul>
+        </div>
       </div>
     );
   }
@@ -94,7 +92,21 @@ class MathButton extends Component {
 }
 
 class App extends Component {
-  state = { firstOperand: 0, secondOperand: 0, result: 0, web3: null, accounts: null, contract: null, secretjs: null, myAddress: null };
+  state = {
+    firstOperand: 0,
+    secondOperand: 0,
+    status: "",
+    calcs: [],
+    total: 0,
+    secretjs: null,
+    myAddress: null,
+    pageSize: 10,
+    page: 0,
+    historyLoading: true,
+    permit: null,
+    signature: null,
+    historyError: false,
+  };
 
   componentDidMount = async () => {
     try {
@@ -108,9 +120,6 @@ class App extends Component {
       ) {
         await sleep(100);
       }
-
-      const CHAIN_ID = "secretdev-1";
-      // const CHAIN_ID = "pulsar-2";
 
       await window.keplr.experimentalSuggestChain({
         chainId: CHAIN_ID,
@@ -163,93 +172,124 @@ class App extends Component {
       } catch (e) {
         console.log("keplr is not configured to work with ", CHAIN_ID);
       }
-      // const [{ address: myAddress }] = await keplrOfflineSigner.getAccounts();
-      // console.log("my address is:", myAddress);
+      const [{ address: myAddress }] = await keplrOfflineSigner.getAccounts();
+      console.log("my address is:", myAddress);
 
-      const wallet = new Wallet(
-        "grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar",
-      );
-      const myAddress = wallet.address;
+      // const wallet = new Wallet(
+      //   "grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar",
+      // );
+      // const myAddress = wallet.address;
 
       const secretjs = await SecretNetworkClient.create({
         grpcWebUrl: process.env.REACT_APP_GRPC_WEB_URL,
         chainId: CHAIN_ID,
-        wallet,
-        // wallet: keplrOfflineSigner,
+        // wallet,
+        wallet: keplrOfflineSigner,
         walletAddress: myAddress,
         encryptionUtils: window.getEnigmaUtils(CHAIN_ID),
       });
       console.log("created secret client");
 
-      // const result = await secretjs.query.compute.queryContract({
-      //   address: CONTRACT_ADDRESS,
-      //   codeHash: CONTRACT_HASH,
-      //   query: {
-      //     with_permit: {
-      //       query: { calculation_history: { page_size: "3" }},
-      //       permit: {
-      //         params: {
-      //           permit_name: "test",
-      //           allowed_tokens: ["secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg"],
-      //           chain_id: "secret-4",
-      //           permissions: ["calculation_history"]
-      //         },
-      //         signature: {
-      //           pub_key: {type: "tendermint/PubKeySecp256k1", value: "A31nYb+/VgwXsjhgmdkRotRexaDmgblDlhQja/rtEKwW"},
-      //           signature: "VsJH5a0qAwfxHihiPsehLCYmzq+69xrqDSYLKuiJPt06GKXt7jckdpHjdzhk8ChLoJpIqCHwWJOVgLQfeCQArg=="
-      //         }
-      //       }
-      //     }
-      //   },
-      // });
-      //
-      // console.log(result);
-
       document.title = "Secret Calculator";
 
-      // todo set correct state
-      this.setState({ web3: undefined, accounts: undefined, contract: undefined, result: 0, secretjs, myAddress });
+      this.setState({ status: "No transactions pending", secretjs, myAddress });
     } catch (error) {
       alert(`Failed to connect to secret network. Check console for details.`);
       console.error(error);
     }
+
+    this.reloadHistory();
+    console.log("state:", this.state);
   };
+
+  reloadHistory = async (additionalStateUpdates) => {
+    const state = {historyLoading: true, ...additionalStateUpdates};
+    console.log("setting state before reloading history: ", JSON.stringify(state, null, 2))
+    await this.setState({
+      historyLoading: true,
+      historyError: false,
+      ...additionalStateUpdates,
+    });
+    try {
+      const [history, signature] = await getHistory({
+        secretjs: this.state.secretjs,
+        page: this.state.page,
+        pageSize: this.state.pageSize,
+        signerAddress: this.state.myAddress,
+        cachedSignature: this.state.signature,
+        chainId: CHAIN_ID,
+        contractAddress: CONTRACT_ADDRESS,
+        contractHash: CONTRACT_HASH,
+      });
+
+      console.log("calculation history received:", history, "sig:", signature);
+      this.setState({
+        calcs: history.calculation_history.calcs,
+        total: parseInt(history.calculation_history.total),
+        historyLoading: false,
+        signature,
+      })
+    } catch (e) {
+      console.error("error when while updating history:", e);
+      this.setState({
+        historyLoading: false,
+        historyError: true,
+      });
+    }
+  }
 
   getOperation = (functionName) => {
     const result = async () => {
+
+      console.log("state:", this.state);
+
       let { firstOperand, secondOperand } = this.state;
       [ firstOperand, secondOperand ] = [ firstOperand.toString(), secondOperand.toString() ];
       console.log(`calling ${functionName} function with operands:`, firstOperand, secondOperand);
 
       let tx;
+      let status;
       try {
         console.log(`sending ${functionName} tx from`, this.state.myAddress);
+        this.setState({status: "Sending transaction..."});
+
+        const msg = { [functionName]: functionName === "sqrt" ? firstOperand : [firstOperand, secondOperand] };
+
         const calculationMessage = new MsgExecuteContract({
           sender: this.state.myAddress,
           contract: CONTRACT_ADDRESS,
           codeHash: CONTRACT_HASH,
-          msg: { [functionName]: functionName === "Sqrt" ? firstOperand : [firstOperand, secondOperand] },
-          sentFunds: [], // optional
+          msg,
         });
 
-        console.log("created msg to broadcast");
-
+        console.log(`broadcasting tx with msg: ${JSON.stringify(msg, null, 2)}`);
         tx = await this.state.secretjs.tx.broadcast([calculationMessage], {
           gasLimit: 200000,
         });
-        console.log("broadcasted tx");
 
+        const txHashEnd = tx.transactionHash.slice(tx.transactionHash.length - 5);
+        console.log("tx successfully included in block");
         console.log(`the tx of the ${functionName} function is:`, tx);
+
+        if (tx.jsonLog?.generic_err || tx.jsonLog?.parse_err) {
+          status = `Transaction ${txHashEnd} errored`;
+          this.setState({status});
+          alert(`Transaction ${txHashEnd} failed: ${tx.jsonLog.generic_err?.msg || tx.jsonLog.parse_err?.msg}`);
+          return;
+        } else {
+          // Ideally we would display the result of the calculation and not the status of the transaction.
+          // Unfortunately, getting the result of a tx is not supported by secretJS right now.
+          // The result can still be seen in the History section
+          status = `Transaction ${txHashEnd} was included in block`;
+          console.log(status);
+        }
       } catch (e) {
-        console.log(`there was an error calling the ${functionName} method:`, e);
+        alert(`there was an error calling the ${functionName} method:`, e);
       }
 
-      const txHash = tx.transactionHash;
-      // Update state with the result.
-      const res = `todo: decode tx ...${txHash.slice(txHash.length - 5)}`;
-      console.log(res)
-      this.setState({ result: res });
+      this.reloadHistory({status});
     }
+
     console.log(`returned ${functionName} function`);
     return result;
   };
@@ -283,6 +323,7 @@ class App extends Component {
     if (!this.state.secretjs) {
       return <div>Loading SecretJs, Keplr, and contract...</div>;
     }
+
     return (
       <div className="App">
         <h1>Secret Calculator</h1>
@@ -299,9 +340,33 @@ class App extends Component {
           <MathButton label="√(operand 1)" onclick={this.functions.sqrt}/>
         </div>
         <h2>
-          result: {this.state.result}
+          {this.state.status}
         </h2>
-        <History secretjs={this.state.secretjs} address={this.state.myAddress} result={this.state.result}/>
+        <History
+          secretjs={this.state.secretjs}
+          calcs={this.state.calcs}
+          total={this.state.total}
+          page_size={this.state.pageSize}
+          page={this.state.page}
+          history_loading={this.state.historyLoading}
+          history_error={this.state.historyError}
+        />
+        <label>
+          <div className="flexbox-container">
+            <button className="Pagination"
+                    onClick={() => this.reloadHistory({page: 0})}
+                    disabled={this.state.page === 0 || this.state.historyLoading}
+            >
+              Page 0
+            </button>
+            <button className="Pagination"
+                    onClick={() => this.reloadHistory({page: this.state.page + 1})}
+                    disabled={this.state.historyLoading || ((this.state.page + 1) * this.state.pageSize) >= this.state.total}
+            >
+              Next page >
+            </button>
+          </div>
+        </label>
       </div>
     );
   }
