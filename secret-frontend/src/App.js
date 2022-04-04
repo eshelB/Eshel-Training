@@ -3,99 +3,17 @@ import {SecretNetworkClient, MsgExecuteContract} from "secretjs";
 
 import "./App.css";
 import {getHistory} from "./getHistory";
+import Input from "./components/Input";
+import History from "./components/History";
+import MathButton from "./components/MathButton";
 
-const CONTRACT_ADDRESS = "secret18vd8fpwxzck93qlwghaj6arh4p7c5n8978vsyg";
-const CONTRACT_HASH = "1a573176d7eab70777a86241c5ac29aa5093d2536a74a41723ed918167f46281";
-const CHAIN_ID = "secretdev-1";
-// const CHAIN_ID = "pulsar-2";
 
-const arithmeticSigns = {
-  Add: "+",
-  Sub: "–",
-  Mul: "×",
-  Div: "÷"
-};
-
-class Input extends Component {
-  render() {
-    return (
-      <div className="Input">
-        <form>
-          <label>
-            operand {this.props.label}: &emsp;
-            <input type="number" min="0" name="numform" onChange={this.props.onchange} value={this.props.value}/>
-          </label>
-        </form>
-      </div>
-    );
-  }
-}
-
-class History extends Component {
-  render() {
-    if (this.props.history_loading) {
-      return <div>Loading History...</div>;
-    }
-
-    if (this.props.history_error) {
-      return <div>Error Getting History</div>;
-    }
-
-    let listItems = []
-
-    if (this.props.total <= 0) {
-      listItems = [<div key="nocalc"> No Past Calculations </div>];
-    } else {
-      listItems = this.props.calcs.map((calculation, index) => {
-        if (calculation.operation === "Sqrt") {
-          return <div key={index}>
-            √( { calculation.left_operand } ) = { calculation.result }
-          </div>
-        }
-
-        return <div key={index}>
-            { calculation.left_operand } &nbsp;
-            { arithmeticSigns[calculation.operation] } &nbsp;
-            { calculation.right_operand } = { calculation.result }
-          </div>
-      });
-    }
-
-    const lowerIndex = Math.min(this.props.total, this.props.page * this.props.page_size + 1);
-    const upperIndex = Math.min(this.props.total, (this.props.page + 1) * this.props.page_size);
-
-    return (
-      <div className="History">
-        <p>
-          History of calculations (Showing {lowerIndex}-{upperIndex} out of {this.props.total}):
-        </p>
-        <div className="b">
-          {listItems}
-        </div>
-      </div>
-    );
-  }
-}
-
-class MathButton extends Component {
-    render() {
-        return (
-            <div className="MathButton">
-                <label>
-                    <button onClick={this.props.onclick}>
-                        {this.props.label}
-                    </button>
-                </label>
-            </div>
-        );
-    }
-}
 
 class App extends Component {
   state = {
     firstOperand: 0,
     secondOperand: 0,
-    status: "",
+    status: "Wallet not yet approved",
     calcs: [],
     total: 0,
     secretjs: null,
@@ -174,11 +92,6 @@ class App extends Component {
       }
       const [{ address: myAddress }] = await keplrOfflineSigner.getAccounts();
       console.log("my address is:", myAddress);
-
-      // const wallet = new Wallet(
-      //   "grant rice replace explain federal release fix clever romance raise often wild taxi quarter soccer fiber love must tape steak together observe swap guitar",
-      // );
-      // const myAddress = wallet.address;
 
       const secretjs = await SecretNetworkClient.create({
         grpcWebUrl: process.env.REACT_APP_GRPC_WEB_URL,
@@ -267,9 +180,10 @@ class App extends Component {
           gasLimit: 200000,
         });
 
-        const txHashEnd = tx.transactionHash.slice(tx.transactionHash.length - 5);
         console.log("tx successfully included in block");
         console.log(`the tx of the ${functionName} function is:`, tx);
+
+        const txHashEnd = tx.transactionHash.slice(tx.transactionHash.length - 5);
 
         if (tx.jsonLog?.generic_err || tx.jsonLog?.parse_err) {
           status = `Transaction ${txHashEnd} errored`;
@@ -284,7 +198,8 @@ class App extends Component {
           console.log(status);
         }
       } catch (e) {
-        alert(`there was an error calling the ${functionName} method:`, e);
+        console.log(e);
+        alert(`there was an error calling the ${functionName} method: ${e.toString()}`);
       }
 
       this.reloadHistory({status});
@@ -351,22 +266,20 @@ class App extends Component {
           history_loading={this.state.historyLoading}
           history_error={this.state.historyError}
         />
-        <label>
-          <div className="flexbox-container">
-            <button className="Pagination"
-                    onClick={() => this.reloadHistory({page: 0})}
-                    disabled={this.state.page === 0 || this.state.historyLoading}
-            >
-              Page 0
-            </button>
-            <button className="Pagination"
-                    onClick={() => this.reloadHistory({page: this.state.page + 1})}
-                    disabled={this.state.historyLoading || ((this.state.page + 1) * this.state.pageSize) >= this.state.total}
-            >
-              Next page >
-            </button>
-          </div>
-        </label>
+        <div className="flexbox-container">
+          <button className="Pagination"
+                  onClick={() => this.reloadHistory({page: 0})}
+                  disabled={this.state.page === 0 || this.state.historyLoading}
+          >
+            Page 0
+          </button>
+          <button className="Pagination"
+                  onClick={() => this.reloadHistory({page: this.state.page + 1})}
+                  disabled={this.state.historyLoading || ((this.state.page + 1) * this.state.pageSize) >= this.state.total}
+          >
+            Next page >
+          </button>
+        </div>
       </div>
     );
   }
