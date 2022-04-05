@@ -41,8 +41,8 @@ class App extends Component {
       await window.keplr.experimentalSuggestChain({
         chainId: process.env.REACT_APP_CHAIN_ID,
         chainName: process.env.REACT_APP_CHAIN_ID,
-        rpc: process.env.REACT_APP_GRPC_WEB_URL,
-        rest: process.env.REACT_APP_GRPC_WEB_URL,
+        rpc: process.env.REACT_APP_RPC_KEPLR,
+        rest: process.env.REACT_APP_LCD_KEPLR,
         bip44: {
           coinType: 529,
         },
@@ -270,7 +270,7 @@ class App extends Component {
                   onClick={() => this.reloadHistory({page: this.state.page + 1})}
                   disabled={this.state.historyLoading || ((this.state.page + 1) * this.state.pageSize) >= this.state.total}
           >
-            Next page >
+            Next page {">"}
           </button>
         </div>
       </div>
