@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import {SecretNetworkClient, MsgExecuteContract} from "secretjs";
+import {SecretNetworkClient, MsgExecuteContract, fromUtf8} from "secretjs";
 
 import "./App.css";
 import {getHistory} from "./getHistory";
@@ -187,7 +187,10 @@ class App extends Component {
           // Ideally we would display the result of the calculation and not the status of the transaction.
           // Unfortunately, getting the result of a tx is not supported by secretJS right now.
           // The result can still be seen in the History section
-          status = `Transaction ${txHashEnd} was included in block`;
+          const resultString = fromUtf8(tx.data[0]);
+          console.log("result in tx data:", resultString);
+          const resultNumber = resultString.slice(1, -1);
+          status = `Transaction ${txHashEnd} was included in block. result: ${parseInt(resultNumber)}`;
           console.log(status);
         }
       } catch (e) {
