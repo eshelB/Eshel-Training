@@ -31,7 +31,6 @@ class App extends Component {
 
       const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
       while (
-        !window.keplr ||
         !window.getEnigmaUtils ||
         !window.getOfflineSignerOnlyAmino
       ) {
@@ -231,6 +230,10 @@ class App extends Component {
   };
 
   render() {
+    if (!window.keplr) {
+      return <div>Keplr extension is not installed =(</div>;
+    }
+
     if (!this.state.secretjs) {
       return <div>Loading SecretJs, Keplr, and contract...</div>;
     }
